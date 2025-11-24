@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { GenerateContentResponse, Content, Part } from "@google/genai";
 import { Trash2, AlertCircle, Database, LogOut, User as UserIcon, Menu, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon } from 'lucide-react';
@@ -560,6 +561,7 @@ const App: React.FC = () => {
           isSpeechEnabled={isSpeechEnabled}
           onToggleSpeech={() => setIsSpeechEnabled(!isSpeechEnabled)}
           currentLanguage={currentLanguage}
+          agentTheme={currentAgent.themeColor}
         />
       </div>
       

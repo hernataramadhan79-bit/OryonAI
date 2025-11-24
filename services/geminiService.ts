@@ -27,26 +27,26 @@ const COMMON_FORMATTING_RULES = `
         *   Introduction from Main Content.
         *   Main Content from Conclusion/Outro.
         *   Between major points if the explanation is long.
-        
-        *Structure Example:*
-        [Brief Introduction]
-        
-        ---
-        ## 🚀 [Main Point 1]
-        [Explanation...]
-        
-        ---
-        ## 💡 [Main Point 2]
-        [Explanation...]
     
     2.  **HEADINGS with EMOJI:**
-        Use Heading 2 (##) + Emoji for major section titles. This is mandatory to ensure the reader's eye is immediately drawn to key points.
+        Use Heading 2 (##) + Emoji for major section titles. 
+        *   Example: \`## 🚀 Core Concept\`
+        *   Example: \`## 💡 Key Solution\`
+        *   Example: \`## 🛠️ Implementation\`
     
-    3.  **LISTS:**
-        Avoid long paragraphs. Break text into Bullet Points (-) or Numbering (1.) whenever listing details.
+    3.  **LISTS & BULLETS:**
+        *   Avoid dense paragraphs. Break text into Bullet Points (-) or Numbered Lists (1.) whenever possible.
+        *   Use nested lists for sub-points to create visual hierarchy.
     
-    4.  **BOLD for Keywords:**
-        **Bold** important keywords in every sentence to improve scannability.`;
+    4.  **BOLD for EMPHASIS:**
+        **Bold** key terms, variable names, and critical concepts to make the text "scannable".
+    
+    5.  **TABLES for COMPARISONS:**
+        If you are comparing 2 or more things, OR listing parameters/specs, **ALWAYS** use a Markdown Table.
+        
+    6.  **CODE BLOCKS:**
+        *   Always use language-specific code blocks (e.g., \`\`\`typescript).
+        *   For explanations of code, prefer comments // INSIDE the code block if it's brief, or bullet points below it.`;
 
 export const AGENTS: Agent[] = [
   {

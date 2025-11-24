@@ -1,23 +1,16 @@
+
 import React, { useState, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message } from '../types';
-import { Bot, User, Download, Image as ImageIcon, Copy, Check } from 'lucide-react';
+import { Bot, User, Download, Copy, Check } from 'lucide-react';
 import TypingIndicator from './TypingIndicator';
+import { getThemeHex } from '../utils/themeUtils';
 
 interface ChatMessageProps {
   message: Message;
   agentTheme?: string;
 }
-
-// Helper to extract hex color from tailwind class for dynamic animations
-const getThemeHex = (themeClass: string = '') => {
-  if (themeClass.includes('green')) return '#4ade80';
-  if (themeClass.includes('pink')) return '#f472b6';
-  if (themeClass.includes('yellow')) return '#facc15';
-  if (themeClass.includes('purple')) return '#a855f7';
-  return '#00f3ff'; // Default cyber-accent
-};
 
 // Optimization: Memoize CodeBlock to prevent re-renders on parent updates
 const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
@@ -98,8 +91,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
   const isStreaming = !!message.isStreaming;
   const pulseAnimationName = `pulse-border-${message.id}`;
 
+  // CSS Variable for Agent Accent Color to be used in Prose
+  const containerStyle = {
+    '--agent-accent': hexColor,
+  } as React.CSSProperties;
+
   return (
-    <div className={`flex w-full mb-8 opacity-0 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div 
+      className={`flex w-full mb-8 opacity-0 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
+      style={containerStyle}
+    >
       
       {/* Dynamic Keyframes for pulsing border matched to agent theme */}
       {isStreaming && !isUser && (
@@ -187,7 +188,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                 ) : (
                    <>
                      {isThinking ? (
-                        <TypingIndicator />
+                        <TypingIndicator themeColor={agentTheme} />
                      ) : (
                        <div className="prose prose-invert prose-sm max-w-none
                          /* Typography Updates for Structured Response */
@@ -195,31 +196,32 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                          /* Paragraphs */
                          prose-p:text-gray-300 prose-p:leading-7 md:prose-p:leading-8 prose-p:mb-4 last:prose-p:mb-0 prose-p:font-sans
                          
-                         /* Headings */
-                         prose-headings:text-white prose-headings:font-bold prose-headings:font-sans prose-headings:mt-8 prose-headings:mb-4
+                         /* Headings - Enhanced Visuals - Using Dynamic CSS Var */
+                         prose-headings:text-white prose-headings:font-bold prose-headings:font-sans prose-headings:mt-8 prose-headings:mb-4 prose-headings:pb-2 prose-headings:border-b prose-headings:border-white/10
                          prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg
                          
-                         /* Lists */
+                         /* Lists - Colored Markers using Dynamic CSS Var */
                          prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-gray-300 prose-ul:space-y-2
                          prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-gray-300 prose-ol:space-y-2
+                         [&_li::marker]:text-[var(--agent-accent)]
                          
                          /* Links */
-                         prose-a:text-cyber-accent prose-a:underline prose-a:decoration-cyber-accent/30 hover:prose-a:text-white hover:prose-a:decoration-white
+                         prose-a:text-[var(--agent-accent)] prose-a:underline prose-a:decoration-[var(--agent-accent)]/30 hover:prose-a:text-white hover:prose-a:decoration-white
                          
-                         /* Table Styling (New) */
-                         prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:text-sm
-                         prose-thead:bg-white/5 prose-thead:border-b prose-thead:border-white/10
-                         prose-th:text-left prose-th:p-3 prose-th:text-white prose-th:font-bold
-                         prose-td:p-3 prose-td:border-b prose-td:border-white/5 prose-td:text-gray-300
+                         /* Table Styling - Tech Data Grid */
+                         prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:text-sm prose-table:bg-white/5 prose-table:rounded-lg prose-table:overflow-hidden
+                         prose-thead:bg-white/10 prose-thead:border-b prose-thead:border-white/10
+                         prose-th:text-left prose-th:p-4 prose-th:text-[var(--agent-accent)] prose-th:font-bold prose-th:uppercase prose-th:tracking-wider prose-th:text-[10px]
+                         prose-td:p-4 prose-td:border-b prose-td:border-white/5 prose-td:text-gray-300
                          
                          /* Blockquote */
-                         prose-blockquote:border-l-4 prose-blockquote:border-cyber-accent/50 prose-blockquote:bg-white/5 prose-blockquote:pl-5 prose-blockquote:py-3 prose-blockquote:my-6 prose-blockquote:pr-4 prose-blockquote:rounded-r-xl prose-blockquote:text-gray-300 prose-blockquote:italic prose-blockquote:font-medium
+                         prose-blockquote:border-l-4 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/5 prose-blockquote:pl-5 prose-blockquote:py-4 prose-blockquote:my-6 prose-blockquote:pr-4 prose-blockquote:rounded-r-xl prose-blockquote:text-gray-300 prose-blockquote:italic prose-blockquote:font-medium
                          
                          /* Strong/Bold */
-                         prose-strong:text-white prose-strong:font-extrabold
+                         prose-strong:text-white prose-strong:font-extrabold prose-strong:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]
                          
                          /* HR */
-                         prose-hr:border-white/10 prose-hr:border-t-2 prose-hr:my-8 prose-hr:w-full prose-hr:rounded-full
+                         prose-hr:border-white/20 prose-hr:border-t-2 prose-hr:my-8 prose-hr:w-full prose-hr:rounded-full
                        ">
                          <ReactMarkdown 
                            remarkPlugins={[remarkGfm]}
@@ -249,5 +251,4 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
   );
 };
 
-// Optimization: Memoize ChatMessage
 export default memo(ChatMessage);

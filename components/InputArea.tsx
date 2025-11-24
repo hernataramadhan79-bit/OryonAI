@@ -1,7 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { SendHorizontal, Paperclip, Trash2, Check, ScanLine, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { LanguageCode, LanguageDefinition } from '../types';
 import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
+import { getThemeHex } from '../utils/themeUtils';
 
 interface InputAreaProps {
   onSend: (text: string, attachment?: { data: string; mimeType: string }) => void;
@@ -10,6 +12,7 @@ interface InputAreaProps {
   isSpeechEnabled: boolean;
   onToggleSpeech: () => void;
   currentLanguage: LanguageCode;
+  agentTheme?: string;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({ 
@@ -18,7 +21,8 @@ const InputArea: React.FC<InputAreaProps> = ({
   isSidebarPinned,
   isSpeechEnabled,
   onToggleSpeech,
-  currentLanguage
+  currentLanguage,
+  agentTheme
 }) => {
   const [input, setInput] = useState('');
   const [attachment, setAttachment] = useState<{ data: string; mimeType: string; preview: string } | null>(null);
@@ -30,6 +34,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   
   const t = getTranslation(currentLanguage);
   const currentLangDef = SUPPORTED_LANGUAGES.find(l => l.code === currentLanguage) || SUPPORTED_LANGUAGES[0];
+  const hexColor = getThemeHex(agentTheme);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -144,10 +149,10 @@ const InputArea: React.FC<InputAreaProps> = ({
               <div className="relative w-full max-w-md mx-auto">
                 <div className="relative rounded-2xl overflow-hidden bg-black/80 backdrop-blur-xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] group">
                   {/* Decorative Elements */}
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-cyber-accent/50 rounded-tl-lg z-20"></div>
-                  <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-cyber-accent/50 rounded-tr-lg z-20"></div>
-                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-cyber-accent/50 rounded-bl-lg z-20"></div>
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-cyber-accent/50 rounded-br-lg z-20"></div>
+                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 rounded-tl-lg z-20" style={{ borderColor: `${hexColor}80` }}></div>
+                  <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 rounded-tr-lg z-20" style={{ borderColor: `${hexColor}80` }}></div>
+                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 rounded-bl-lg z-20" style={{ borderColor: `${hexColor}80` }}></div>
+                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 rounded-br-lg z-20" style={{ borderColor: `${hexColor}80` }}></div>
                   
                   <div className="relative p-1 bg-white/5">
                      <div className="relative rounded-lg overflow-hidden bg-cyber-black/50 min-h-[150px] max-h-[250px] flex items-center justify-center">
@@ -157,7 +162,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
                   {/* Footer Controls */}
                   <div className="flex items-center justify-between p-3 border-t border-white/10 bg-white/5">
-                     <div className="flex items-center gap-2 text-cyber-accent/70 px-2">
+                     <div className="flex items-center gap-2 px-2" style={{ color: hexColor }}>
                         <ScanLine size={14} className="animate-pulse" />
                         <span className="text-[9px] font-mono tracking-[0.2em] uppercase">{t.visualReady}</span>
                      </div>
@@ -166,7 +171,15 @@ const InputArea: React.FC<InputAreaProps> = ({
                           <Trash2 size={12} />
                           <span className="text-[10px] font-bold tracking-wide">{t.discard}</span>
                         </button>
-                        <button onClick={() => handleSubmit()} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyber-accent/10 hover:bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/20 transition-all active:scale-95">
+                        <button 
+                          onClick={() => handleSubmit()} 
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all active:scale-95"
+                          style={{ 
+                            backgroundColor: `${hexColor}1a`, // 10% opacity
+                            borderColor: `${hexColor}33`, // 20% opacity
+                            color: hexColor
+                          }}
+                        >
                           <Check size={12} />
                           <span className="text-[10px] font-bold tracking-wide">{t.send}</span>
                         </button>
@@ -178,12 +191,15 @@ const InputArea: React.FC<InputAreaProps> = ({
           )}
 
           {/* Input Container */}
-          <div className={`
-            relative flex items-end gap-2 p-1.5 rounded-[26px] backdrop-blur-2xl border transition-all duration-500
-            ${isFocused || isListening
-              ? 'bg-white/10 border-white/20 shadow-[0_0_40px_rgba(0,243,255,0.15)]' 
-              : 'bg-white/5 border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]'}
-          `}>
+          <div 
+            className={`
+              relative flex items-end gap-2 p-1.5 rounded-[26px] backdrop-blur-2xl border transition-all duration-500
+              ${isFocused || isListening
+                ? 'bg-white/10 border-white/20' 
+                : 'bg-white/5 border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]'}
+            `}
+            style={isFocused || isListening ? { boxShadow: `0 0 40px ${hexColor}26` } : {}}
+          >
             
             {/* Top highlight */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50"></div>
@@ -217,8 +233,9 @@ const InputArea: React.FC<InputAreaProps> = ({
               className={`
                 w-10 h-10 rounded-full flex-shrink-0 transition-all duration-300
                 flex items-center justify-center active:scale-95
-                ${isSpeechEnabled ? 'text-cyber-accent hover:bg-cyber-accent/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}
+                ${isSpeechEnabled ? 'hover:bg-white/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}
               `}
+              style={isSpeechEnabled ? { color: hexColor } : {}}
               title={isSpeechEnabled ? "Bot Voice: ON" : "Bot Voice: OFF"}
             >
               {isSpeechEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
@@ -236,12 +253,12 @@ const InputArea: React.FC<InputAreaProps> = ({
               disabled={isLoading}
               className={`
                 flex-grow bg-transparent focus:outline-none resize-none font-sans text-[15px] transition-colors duration-300
-                text-gray-100 placeholder-gray-500 caret-cyber-accent
+                text-gray-100 placeholder-gray-500
                 custom-scrollbar
                 leading-[20px] py-[10px] min-h-[40px]
               `}
+              style={{ caretColor: hexColor }}
               rows={1}
-              style={{ height: '40px' }} 
             />
 
             {/* Voice Input Button */}
@@ -268,10 +285,11 @@ const InputArea: React.FC<InputAreaProps> = ({
                 flex items-center justify-center relative group
                 ${(!input.trim() && !attachment) || isLoading 
                   ? 'bg-white/5 text-gray-600 opacity-50 cursor-not-allowed scale-95' 
-                  : 'bg-white/10 text-cyber-accent shadow-[0_0_20px_rgba(0,243,255,0.2)] hover:shadow-[0_0_30px_rgba(0,243,255,0.4)] hover:bg-white/20 active:scale-90'}
+                  : 'bg-white/10 hover:bg-white/20 active:scale-90'}
               `}
+              style={(!input.trim() && !attachment) || isLoading ? {} : { color: hexColor, boxShadow: `0 0 20px ${hexColor}33` }}
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-cyber-accent/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle, ${hexColor}33 0%, transparent 70%)` }}></div>
               <SendHorizontal size={20} className={`relative z-10 transition-transform duration-500 ${(!input.trim() && !attachment) || isLoading ? '' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'}`} />
             </button>
           </div>
