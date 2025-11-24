@@ -12,7 +12,6 @@ import Sidebar from './components/Sidebar';
 
 const App: React.FC = () => {
   // Initialize state directly from storage to avoid flash of login screen
-  // This synchronous check ensures the app renders the main UI immediately if logged in
   const [currentUser, setCurrentUser] = useState<User | null>(() => getSessionUser());
   
   // State for the CURRENT active conversation
@@ -31,14 +30,15 @@ const App: React.FC = () => {
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<Agent>(AGENTS[0]);
 
-  // Derived state for visibility: Visible if Pinned OR Hovered
+  // Responsive Sidebar Logic
+  // On Mobile: Sidebar is an overlay.
+  // On Desktop: Sidebar pushes content.
   const isSidebarOpen = isSidebarPinned || isSidebarHovered;
 
   // Load Memory (Multi-Agent)
   useEffect(() => {
     if (!currentUser) return;
 
-    // Use a new key for the structured multi-agent memory
     const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
     const savedData = localStorage.getItem(userStorageKey);
     
@@ -47,11 +47,9 @@ const App: React.FC = () => {
         const parsedStore: Record<string, Message[]> = JSON.parse(savedData);
         setHistoryStore(parsedStore);
         
-        // Load messages for the default (or current) agent
         const agentMessages = parsedStore[currentAgent.id] || [];
         setMessages(agentMessages);
         
-        // Initialize Gemini with this specific history
         initializeGeminiWithHistory(agentMessages, currentAgent.systemInstruction);
         
         if (agentMessages.length === 0) {
@@ -66,11 +64,11 @@ const App: React.FC = () => {
       setInitialWelcome(currentUser.displayName, currentAgent);
     }
     setIsMemoryLoaded(true);
-  }, [currentUser]); // Run once on user load
+  }, [currentUser]); 
 
   // Helper to re-init Gemini context
   const initializeGeminiWithHistory = (msgs: Message[], instruction: string) => {
-    resetChat(); // Always clear previous context first
+    resetChat(); 
     
     const validHistory: Content[] = [];
     msgs.forEach(m => {
@@ -103,7 +101,6 @@ const App: React.FC = () => {
   // Save Memory (Update Store when Messages Change)
   useEffect(() => {
     if (currentUser && isMemoryLoaded) {
-       // Update the store with the latest messages for the CURRENT agent
        const updatedStore = {
          ...historyStore,
          [currentAgent.id]: messages
@@ -112,13 +109,11 @@ const App: React.FC = () => {
        const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
        localStorage.setItem(userStorageKey, JSON.stringify(updatedStore));
        
-       // Update the Ref/State of store so switching agents gets latest data
        setHistoryStore(updatedStore);
     }
   }, [messages, currentUser, isMemoryLoaded, currentAgent.id]);
 
   const setInitialWelcome = (name: string, agent: Agent) => {
-    // Generate a welcome message specific to the agent role
     let welcomeText = "";
     switch(agent.id) {
         case 'devcore': welcomeText = `DevCore System Online. Ready for code analysis. Target?`; break;
@@ -150,7 +145,6 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
-    // Note: isMemoryLoaded will be set to true by the useEffect monitoring currentUser
   };
 
   const handleLogout = () => {
@@ -162,33 +156,33 @@ const App: React.FC = () => {
     resetChat();
   };
 
-  // --- CORE AGENT SWITCHING LOGIC ---
   const handleAgentChange = (newAgent: Agent) => {
     if (newAgent.id === currentAgent.id) return;
     
-    // 1. Force save current messages to the store before switching
     const updatedStore = {
         ...historyStore,
         [currentAgent.id]: messages
     };
-    setHistoryStore(updatedStore); // Sync React state
+    setHistoryStore(updatedStore); 
     if (currentUser) {
         localStorage.setItem(`oryon_multi_agent_memory_${currentUser.username}`, JSON.stringify(updatedStore));
     }
 
-    // 2. Load messages for the NEW agent
     const nextMessages = updatedStore[newAgent.id] || [];
     
-    // 3. Update State
     setCurrentAgent(newAgent);
     setMessages(nextMessages);
     
-    // 4. Re-Initialize Gemini Context for the new agent
     initializeGeminiWithHistory(nextMessages, newAgent.systemInstruction);
 
-    // 5. If empty, trigger welcome
     if (nextMessages.length === 0) {
         setInitialWelcome(currentUser?.displayName || 'User', newAgent);
+    }
+    
+    // Mobile UX: Close sidebar after selection
+    if (window.innerWidth < 768) {
+      setIsSidebarPinned(false);
+      setIsSidebarHovered(false);
     }
   };
 
@@ -204,7 +198,6 @@ const App: React.FC = () => {
 
     setMessages((prev) => [...prev, initialAiMessage]);
 
-    // Build current history context
     const historyContext: Content[] = [];
     messages.forEach(m => {
        if (m.type === 'text' && !m.isStreaming) {
@@ -276,7 +269,6 @@ const App: React.FC = () => {
       const aiMessageId = uuidv4();
       let handled = false;
 
-      // VELOCIS (Creative & Visual Engine) Logic
       if (currentAgent.id === 'velocis') {
          const intent = await analyzeInputIntent(text);
 
@@ -328,7 +320,6 @@ const App: React.FC = () => {
     
     resetChat();
     
-    // Clear ONLY the current agent's history in the store
     const updatedStore = {
         ...historyStore,
         [currentAgent.id]: []
@@ -352,7 +343,6 @@ const App: React.FC = () => {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Ensure memory is loaded before rendering the chat interface
   if (!isMemoryLoaded) return null;
 
   return (
@@ -369,23 +359,28 @@ const App: React.FC = () => {
         onSelectAgent={handleAgentChange}
       />
 
-      {/* Main Content Wrapper - Shifts when sidebar is open */}
+      {/* Overlay backdrop for mobile when sidebar is open */}
       <div 
-        className={`flex-grow flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] relative`}
-        style={{ paddingLeft: isSidebarOpen ? '20rem' : '0', willChange: 'padding-left' }}
-      >
-        {/* Header - Liquid Glass */}
-        <header className={`
-          fixed top-0 right-0 z-30 backdrop-blur-xl border-b h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
-          bg-cyber-black/60 border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]
+        className={`md:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => { setIsSidebarPinned(false); setIsSidebarHovered(false); }}
+      ></div>
+
+      {/* Main Content Wrapper */}
+      <div 
+        className={`flex-grow flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] relative
+          ${isSidebarOpen ? 'md:pl-80' : 'pl-0'} 
         `}
-        style={{ width: isSidebarOpen ? 'calc(100% - 20rem)' : '100%', willChange: 'width' }}
-        >
+      >
+        {/* Header */}
+        <header className={`
+          fixed top-0 right-0 z-20 backdrop-blur-xl border-b h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+          bg-cyber-black/60 border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]
+          w-full ${isSidebarOpen ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
+        `}>
           
           <div className="flex items-center gap-4 md:gap-6">
-            {/* Menu Button - Trigger Hover */}
+            {/* Menu Button */}
             <button 
-              onMouseEnter={() => setIsSidebarHovered(true)}
               onClick={() => setIsSidebarPinned(!isSidebarPinned)}
               className={`
                 w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-300
@@ -422,8 +417,8 @@ const App: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-3">
-               <div className="flex items-center gap-3 group cursor-default pl-4 border-l border-white/10">
-                  <span className="hidden md:block text-sm font-medium text-gray-300 tracking-wide">
+               <div className="hidden md:flex items-center gap-3 group cursor-default pl-4 border-l border-white/10">
+                  <span className="text-sm font-medium text-gray-300 tracking-wide">
                     {currentUser.displayName}
                   </span>
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all duration-300 bg-gradient-to-br from-white/10 to-white/5 border-white/10 text-white shadow-lg">
@@ -431,7 +426,7 @@ const App: React.FC = () => {
                   </div>
                </div>
                
-               {/* Action Buttons - Liquid Glass */}
+               {/* Action Buttons */}
                <div className="flex gap-2">
                   <button onClick={handleClearChat} className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 text-gray-400 transition-all duration-300 active:scale-90" title="Clear current session">
                      <Trash2 size={16} />
@@ -474,11 +469,8 @@ const App: React.FC = () => {
       
       {/* Dynamic Background FX */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden transition-all duration-1000">
-        {/* Animated Gradient Orbs */}
         <div className={`absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[150px] transition-all duration-1000 opacity-40 mix-blend-screen animate-pulse-slow ${currentAgent.themeColor.includes('text-pink') ? 'bg-pink-600/20' : currentAgent.themeColor.includes('text-green') ? 'bg-green-600/20' : 'bg-cyan-600/20'}`}></div>
         <div className={`absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[150px] transition-all duration-1000 opacity-30 mix-blend-screen animate-pulse-slow ${currentAgent.themeColor.includes('text-pink') ? 'bg-purple-600/20' : 'bg-purple-900/30'}`} style={{ animationDelay: '2s' }}></div>
-        
-        {/* Subtle Noise Texture for depth */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
       </div>
     </div>

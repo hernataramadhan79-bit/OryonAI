@@ -3,7 +3,7 @@ import { X, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon, Pin, PinOff }
 import { Agent } from '../types';
 
 interface SidebarProps {
-  isOpen: boolean; // Determines visibility (translation)
+  isOpen: boolean; 
   isPinned: boolean;
   onPinToggle: () => void;
   onHoverStart: () => void;
@@ -29,7 +29,6 @@ interface AgentItemProps {
   onClick: () => void;
 }
 
-// Helper component moved outside to prevent re-renders/remounts
 const AgentItem: React.FC<AgentItemProps> = memo(({ agent, isActive, onClick }) => (
   <button
     onClick={onClick}
@@ -42,14 +41,10 @@ const AgentItem: React.FC<AgentItemProps> = memo(({ agent, isActive, onClick }) 
       active:scale-[0.97]
     `}
   >
-    {/* Liquid Fill Effect on Hover */}
     <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-1000 ease-in-out transform translate-x-[-100%] group-hover:translate-x-[100%] pointer-events-none`}></div>
-    
-    {/* Glass Highlight (Top Edge) */}
     <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50"></div>
 
     <div className="relative z-10 flex items-start gap-4">
-      {/* Icon Box - Glassy */}
       <div className={`
         p-3 rounded-xl flex items-center justify-center transition-all duration-500
         shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]
@@ -94,10 +89,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     <div 
       onMouseEnter={onHoverStart}
       onMouseLeave={onHoverEnd}
-      // Added 'will-change-transform' and 'transform-gpu' for GPU optimization
       className={`
-        fixed top-0 left-0 h-full w-80 z-40 
-        bg-cyber-black/90 backdrop-blur-2xl border-r border-white/5
+        fixed top-0 left-0 h-full w-80 z-50 
+        bg-cyber-black/95 backdrop-blur-2xl border-r border-white/5
         shadow-[20px_0_50px_rgba(0,0,0,0.3)] 
         transform-gpu transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}

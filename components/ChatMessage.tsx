@@ -1,5 +1,6 @@
 import React, { useState, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Message } from '../types';
 import { Bot, User, Download, Image as ImageIcon, Copy, Check } from 'lucide-react';
 import TypingIndicator from './TypingIndicator';
@@ -115,12 +116,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
         
         {/* Avatar - Glassy */}
         <div className={`
-          flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center border backdrop-blur-xl mt-1 transition-all duration-500 shadow-lg group
+          flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-2xl flex items-center justify-center border backdrop-blur-xl mt-1 transition-all duration-500 shadow-lg group
           ${isUser 
             ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' 
             : `bg-white/5 border-white/10 ${themeColor} hover:bg-white/10`}
         `}>
-          {isUser ? <User size={18} className="transition-transform duration-500 group-hover:scale-110" /> : <Bot size={18} className="transition-transform duration-500 group-hover:scale-110" />}
+          {isUser ? <User size={16} className="md:w-[18px] md:h-[18px] transition-transform duration-500 group-hover:scale-110" /> : <Bot size={16} className="md:w-[18px] md:h-[18px] transition-transform duration-500 group-hover:scale-110" />}
         </div>
 
         {/* Content Bubble */}
@@ -132,7 +133,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
           <div 
             style={isStreaming && !isUser ? { animation: `${pulseAnimationName} 2s infinite ease-in-out` } : {}}
             className={`
-            group relative px-6 py-5 text-[15px] leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full backdrop-blur-xl shadow-sm
+            group relative px-5 py-4 md:px-6 md:py-5 text-[14px] md:text-[15px] leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full backdrop-blur-xl shadow-sm
             ${isUser 
               ? 'bg-white/10 text-gray-100 rounded-[2rem] rounded-tr-sm border border-white/10 w-fit hover:bg-white/15 hover:shadow-[0_8px_30px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:scale-[0.98]' 
               : `bg-black/20 text-gray-200 rounded-[2rem] rounded-tl-sm border border-white/5 border-l-2 ${borderColor} w-full hover:bg-black/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] active:scale-[0.99]`} 
@@ -191,36 +192,37 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                        <div className="prose prose-invert prose-sm max-w-none
                          /* Typography Updates for Structured Response */
                          
-                         /* Paragraphs: Good spacing, clean font */
-                         prose-p:text-gray-300 prose-p:leading-8 prose-p:mb-5 last:prose-p:mb-0 prose-p:font-sans
+                         /* Paragraphs */
+                         prose-p:text-gray-300 prose-p:leading-7 md:prose-p:leading-8 prose-p:mb-4 last:prose-p:mb-0 prose-p:font-sans
                          
-                         /* Headings: Bright white, bold, prominent spacing */
-                         prose-headings:text-white prose-headings:font-bold prose-headings:font-sans prose-headings:mt-10 prose-headings:mb-4
+                         /* Headings */
+                         prose-headings:text-white prose-headings:font-bold prose-headings:font-sans prose-headings:mt-8 prose-headings:mb-4
                          prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg
                          
-                         /* Lists: Indented, aligned, well-spaced */
-                         prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-gray-300 prose-ul:space-y-3
-                         prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-gray-300 prose-ol:space-y-3
-                         
-                         /* List Items */
-                         prose-li:marker:text-gray-500 prose-li:leading-7
+                         /* Lists */
+                         prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-gray-300 prose-ul:space-y-2
+                         prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-gray-300 prose-ol:space-y-2
                          
                          /* Links */
                          prose-a:text-cyber-accent prose-a:underline prose-a:decoration-cyber-accent/30 hover:prose-a:text-white hover:prose-a:decoration-white
                          
-                         /* Pre/Code: Clean slate */
-                         prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0 prose-pre:border-none prose-pre:rounded-none
+                         /* Table Styling (New) */
+                         prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:text-sm
+                         prose-thead:bg-white/5 prose-thead:border-b prose-thead:border-white/10
+                         prose-th:text-left prose-th:p-3 prose-th:text-white prose-th:font-bold
+                         prose-td:p-3 prose-td:border-b prose-td:border-white/5 prose-td:text-gray-300
                          
-                         /* Blockquote: Distinctive styling */
+                         /* Blockquote */
                          prose-blockquote:border-l-4 prose-blockquote:border-cyber-accent/50 prose-blockquote:bg-white/5 prose-blockquote:pl-5 prose-blockquote:py-3 prose-blockquote:my-6 prose-blockquote:pr-4 prose-blockquote:rounded-r-xl prose-blockquote:text-gray-300 prose-blockquote:italic prose-blockquote:font-medium
                          
-                         /* Strong/Bold: High contrast for keywords */
+                         /* Strong/Bold */
                          prose-strong:text-white prose-strong:font-extrabold
                          
-                         /* HR: VISUAL DIVIDER STYLING */
+                         /* HR */
                          prose-hr:border-white/10 prose-hr:border-t-2 prose-hr:my-8 prose-hr:w-full prose-hr:rounded-full
                        ">
                          <ReactMarkdown 
+                           remarkPlugins={[remarkGfm]}
                            components={{
                              code: CodeBlock
                            }}
