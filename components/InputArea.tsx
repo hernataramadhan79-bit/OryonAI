@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { SendHorizontal, Paperclip, Trash2, Check, ScanLine, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
-import { LanguageCode, LanguageDefinition } from '../types';
+import { SendHorizontal, Paperclip, Check, ScanLine, Mic, MicOff, Volume2, VolumeX, Trash2 } from 'lucide-react';
+import { LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 import { getThemeHex } from '../utils/themeUtils';
 
@@ -42,8 +42,6 @@ const InputArea: React.FC<InputAreaProps> = ({
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = false;
         recognitionRef.current.interimResults = true;
-        
-        // DYNAMIC LANGUAGE SETTING
         recognitionRef.current.lang = currentLangDef.voiceCode;
 
         recognitionRef.current.onresult = (event: any) => {
@@ -63,15 +61,13 @@ const InputArea: React.FC<InputAreaProps> = ({
             setIsListening(false);
         };
     }
-  }, [currentLanguage, currentLangDef.voiceCode]); // Re-initialize when language changes
+  }, [currentLanguage, currentLangDef.voiceCode]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-        alert("Voice input is not supported in this browser. Try Chrome or Edge.");
+        alert("Voice input is not supported in this browser.");
         return;
     }
-
-    // Ensure lang is updated before starting
     recognitionRef.current.lang = currentLangDef.voiceCode;
 
     if (isListening) {
@@ -91,7 +87,7 @@ const InputArea: React.FC<InputAreaProps> = ({
       setInput('');
       setAttachment(null);
       if (textareaRef.current) {
-        textareaRef.current.style.height = '40px'; // Reset to base height
+        textareaRef.current.style.height = '40px'; 
       }
     }
   };
@@ -106,43 +102,30 @@ const InputArea: React.FC<InputAreaProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Safety check for file size (e.g. 10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        alert("File too large. Maximum size is 10MB.");
+        alert("File too large. Max 10MB.");
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
 
       const reader = new FileReader();
-      
       reader.onload = (event) => {
         try {
           const result = event.target?.result;
           if (typeof result === 'string') {
-            // Robustly extract base64 data
             const parts = result.split(',');
             if (parts.length >= 2) {
-              const base64Data = parts[1];
               setAttachment({
-                data: base64Data,
+                data: parts[1],
                 mimeType: file.type,
                 preview: result
               });
-            } else {
-              throw new Error("Invalid file format");
             }
           }
         } catch (err) {
-          console.error("Error processing file:", err);
-          alert("Failed to process image. Please try another file.");
+          console.error(err);
         }
       };
-
-      reader.onerror = () => {
-        console.error("Error reading file");
-        alert("Error reading file.");
-      };
-
       reader.readAsDataURL(file);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -152,6 +135,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
+      // Enforce minimum height of 40px to match buttons
       const newHeight = Math.min(Math.max(scrollHeight, 40), 150);
       textareaRef.current.style.height = `${newHeight}px`;
     }
@@ -161,53 +145,33 @@ const InputArea: React.FC<InputAreaProps> = ({
     <div 
       className={`fixed bottom-0 right-0 z-20 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         w-full ${isSidebarPinned ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
-        pb-[env(safe-area-inset-bottom)] bg-cyber-black/80 backdrop-blur-md
+        pb-[calc(env(safe-area-inset-bottom)+10px)] bg-transparent
       `}
     >
-      {/* Gradient Fade for seamless scroll feel - Positioned above the container */}
-      <div className="absolute -top-24 md:-top-32 left-0 w-full h-24 md:h-32 bg-gradient-to-t from-cyber-black via-cyber-black/90 to-transparent pointer-events-none"></div>
-
-      <div className="relative w-full max-w-3xl mx-auto px-2 md:px-4 pb-2 md:pb-4 pt-2">
+      {/* Input Container Wrapper for Floating Effect */}
+      <div className="relative w-full max-w-3xl mx-auto px-4 md:px-4">
           
-          {/* Attachment HUD Preview */}
+          {/* Attachment Preview */}
           {attachment && (
-            <div className="mb-4 animate-fade-in-up origin-bottom px-2">
-              <div className="relative w-full max-w-md mx-auto">
-                <div className="relative rounded-2xl overflow-hidden bg-black/80 backdrop-blur-xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] group">
-                  {/* Decorative Elements */}
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 rounded-tl-lg z-20" style={{ borderColor: `${hexColor}80` }}></div>
-                  <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 rounded-tr-lg z-20" style={{ borderColor: `${hexColor}80` }}></div>
-                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 rounded-bl-lg z-20" style={{ borderColor: `${hexColor}80` }}></div>
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 rounded-br-lg z-20" style={{ borderColor: `${hexColor}80` }}></div>
-                  
+            <div className="mb-3 animate-fade-in-up origin-bottom">
+              <div className="relative w-full max-w-sm mx-auto">
+                <div className="relative rounded-2xl overflow-hidden bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl group">
                   <div className="relative p-1 bg-white/5">
-                     <div className="relative rounded-lg overflow-hidden bg-cyber-black/50 min-h-[150px] max-h-[250px] flex items-center justify-center">
-                       <img src={attachment.preview} alt="Preview" className="relative z-10 w-full h-full object-contain max-h-[250px]" />
+                     <div className="relative rounded-lg overflow-hidden bg-cyber-black/50 min-h-[120px] max-h-[200px] flex items-center justify-center">
+                       <img src={attachment.preview} alt="Preview" className="relative z-10 w-full h-full object-contain max-h-[200px]" />
                      </div>
                   </div>
-
-                  {/* Footer Controls */}
-                  <div className="flex items-center justify-between p-3 border-t border-white/10 bg-white/5">
+                  <div className="flex items-center justify-between p-2.5 border-t border-white/10 bg-white/5">
                      <div className="flex items-center gap-2 px-2" style={{ color: hexColor }}>
                         <ScanLine size={14} className="animate-pulse" />
-                        <span className="text-[9px] font-mono tracking-[0.2em] uppercase hidden md:inline">{t.visualReady}</span>
+                        <span className="text-[10px] font-mono tracking-widest uppercase">READY</span>
                      </div>
                      <div className="flex gap-2">
-                        <button onClick={() => setAttachment(null)} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all active:scale-95">
-                          <Trash2 size={12} />
-                          <span className="text-[10px] font-bold tracking-wide">{t.discard}</span>
+                        <button onClick={() => setAttachment(null)} className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all active:scale-95">
+                          <Trash2 size={14} />
                         </button>
-                        <button 
-                          onClick={() => handleSubmit()} 
-                          className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all active:scale-95"
-                          style={{ 
-                            backgroundColor: `${hexColor}1a`, // 10% opacity
-                            borderColor: `${hexColor}33`, // 20% opacity
-                            color: hexColor
-                          }}
-                        >
-                          <Check size={12} />
-                          <span className="text-[10px] font-bold tracking-wide">{t.send}</span>
+                        <button onClick={() => handleSubmit()} className="p-2 rounded-lg border transition-all active:scale-95 bg-white/5 hover:bg-white/10 text-white border-white/10">
+                          <Check size={14} />
                         </button>
                      </div>
                   </div>
@@ -216,57 +180,37 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
           )}
 
-          {/* Input Container - IMPROVED SPACING FOR MOBILE */}
+          {/* Main Input Bar */}
           <div 
             className={`
-              relative flex items-end gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-[24px] md:rounded-[26px] backdrop-blur-2xl border transition-all duration-500
-              mx-0 md:mx-0
-              ${isFocused || isListening
-                ? 'bg-white/10 border-white/20' 
-                : 'bg-white/5 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'}
+              relative flex items-end gap-1 md:gap-2 p-1 md:p-1.5 rounded-[28px] backdrop-blur-2xl border transition-all duration-500
+              mx-auto shadow-[0_4px_30px_rgba(0,0,0,0.5)]
+              ${isFocused || isListening ? 'bg-black/80 border-white/30' : 'bg-black/60 border-white/10'}
             `}
-            style={isFocused || isListening ? { boxShadow: `0 0 40px ${hexColor}26` } : {}}
+            style={isFocused || isListening ? { boxShadow: `0 0 30px ${hexColor}1a`, borderColor: `${hexColor}50` } : {}}
           >
             
-            {/* Top highlight */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50"></div>
+            <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
 
-            <input 
-              type="file" 
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              accept="image/*" 
-              className="hidden" 
-            />
+            {/* Left Actions */}
+            <div className="flex items-center gap-0.5">
+                <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+                title="Attach"
+                >
+                <Paperclip size={20} />
+                </button>
 
-            {/* Attachment Button */}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading}
-              className={`
-                w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0 transition-all duration-300
-                flex items-center justify-center
-                text-gray-400 hover:text-white hover:bg-white/10 active:scale-95
-                disabled:opacity-50
-              `}
-              title="Attach image"
-            >
-              <Paperclip size={18} className="md:w-5 md:h-5" />
-            </button>
-
-            {/* TTS Toggle Button - Hidden on very small screens if crowded, or kept compact */}
-            <button
-              onClick={onToggleSpeech}
-              className={`
-                w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0 transition-all duration-300
-                flex items-center justify-center active:scale-95
-                ${isSpeechEnabled ? 'hover:bg-white/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}
-              `}
-              style={isSpeechEnabled ? { color: hexColor } : {}}
-              title={isSpeechEnabled ? "Bot Voice: ON" : "Bot Voice: OFF"}
-            >
-              {isSpeechEnabled ? <Volume2 size={18} className="md:w-5 md:h-5" /> : <VolumeX size={18} className="md:w-5 md:h-5" />}
-            </button>
+                <button
+                onClick={onToggleSpeech}
+                className={`w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all ${isSpeechEnabled ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                style={isSpeechEnabled ? { color: hexColor } : {}}
+                >
+                {isSpeechEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                </button>
+            </div>
 
             {/* Text Input */}
             <textarea
@@ -278,54 +222,34 @@ const InputArea: React.FC<InputAreaProps> = ({
               onBlur={() => setIsFocused(false)}
               placeholder={isListening ? t.listening : t.messagePlaceholder}
               disabled={isLoading}
-              className={`
-                flex-grow bg-transparent focus:outline-none resize-none font-sans text-[14px] md:text-[15px] transition-colors duration-300
-                text-gray-100 placeholder-gray-500
-                custom-scrollbar
-                leading-[20px] py-[8px] md:py-[10px] min-h-[36px] md:min-h-[40px]
-              `}
+              className="flex-grow bg-transparent focus:outline-none resize-none font-sans text-[15px] text-gray-100 placeholder-gray-500 custom-scrollbar leading-[20px] py-[10px] min-h-[40px]"
               style={{ caretColor: hexColor }}
               rows={1}
             />
 
-            {/* Voice Input Button */}
-            <button
-              onClick={toggleListening}
-              className={`
-                w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0 transition-all duration-300
-                flex items-center justify-center active:scale-95
-                ${isListening 
-                    ? 'bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/10'}
-              `}
-              title={`Voice Input (${currentLangDef.name})`}
-            >
-              {isListening ? <MicOff size={18} className="md:w-5 md:h-5" /> : <Mic size={18} className="md:w-5 md:h-5" />}
-            </button>
+            {/* Right Actions */}
+            <div className="flex items-center gap-1">
+                <button
+                onClick={toggleListening}
+                className={`w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+                >
+                {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                </button>
 
-            {/* Send Button */}
-            <button
-              onClick={() => handleSubmit()}
-              disabled={(!input.trim() && !attachment) || isLoading}
-              className={`
-                w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0 transition-all duration-500 ease-out overflow-hidden
-                flex items-center justify-center relative group
-                ${(!input.trim() && !attachment) || isLoading 
-                  ? 'bg-white/5 text-gray-600 opacity-50 cursor-not-allowed scale-95' 
-                  : 'bg-white/10 hover:bg-white/20 active:scale-90'}
-              `}
-              style={(!input.trim() && !attachment) || isLoading ? {} : { color: hexColor, boxShadow: `0 0 20px ${hexColor}33` }}
-            >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle, ${hexColor}33 0%, transparent 70%)` }}></div>
-              <SendHorizontal size={18} className={`md:w-5 md:h-5 relative z-10 transition-transform duration-500 ${(!input.trim() && !attachment) || isLoading ? '' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'}`} />
-            </button>
-          </div>
-          
-          {/* Footer Text - Hidden on mobile to save vertical space */}
-          <div className="text-center mt-2 md:mt-3 opacity-60 hidden md:block">
-             <p className="text-[9px] font-mono tracking-[0.3em] text-gray-600 drop-shadow-sm">
-               {t.madeBy}
-             </p>
+                <button
+                onClick={() => handleSubmit()}
+                disabled={(!input.trim() && !attachment) || isLoading}
+                className={`
+                    w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 relative group overflow-hidden
+                    ${(!input.trim() && !attachment) || isLoading 
+                    ? 'bg-white/5 text-gray-600 opacity-50 cursor-not-allowed' 
+                    : 'bg-white/10 hover:bg-white/20 active:scale-90'}
+                `}
+                style={(!input.trim() && !attachment) || isLoading ? {} : { color: hexColor, backgroundColor: `${hexColor}15` }}
+                >
+                <SendHorizontal size={20} className={(!input.trim() && !attachment) || isLoading ? '' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform'} />
+                </button>
+            </div>
           </div>
       </div>
     </div>
