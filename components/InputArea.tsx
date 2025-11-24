@@ -1,18 +1,74 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { SendHorizontal, Paperclip, Trash2, Check, ScanLine } from 'lucide-react';
+import { SendHorizontal, Paperclip, Trash2, Check, ScanLine, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 
 interface InputAreaProps {
   onSend: (text: string, attachment?: { data: string; mimeType: string }) => void;
   isLoading: boolean;
   isSidebarOpen: boolean;
+  isSpeechEnabled: boolean;
+  onToggleSpeech: () => void;
 }
 
-const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen }) => {
+const InputArea: React.FC<InputAreaProps> = ({ 
+  onSend, 
+  isLoading, 
+  isSidebarOpen,
+  isSpeechEnabled,
+  onToggleSpeech
+}) => {
   const [input, setInput] = useState('');
   const [attachment, setAttachment] = useState<{ data: string; mimeType: string; preview: string } | null>(null);
+  const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
   const [isFocused, setIsFocused] = useState(false);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US'; // Default to English, can be dynamic
+
+        recognitionRef.current.onresult = (event: any) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                transcript += event.results[i][0].transcript;
+            }
+            // Append to current input or replace? Usually replace for simple commands, append for dictation.
+            // Here we'll set it directly for smoothness.
+            setInput(transcript);
+        };
+
+        recognitionRef.current.onend = () => {
+            setIsListening(false);
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+            console.error("Speech recognition error", event.error);
+            setIsListening(false);
+        };
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+        alert("Voice input is not supported in this browser. Try Chrome or Edge.");
+        return;
+    }
+
+    if (isListening) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+    } else {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setIsFocused(true);
+    }
+  };
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -54,10 +110,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
 
   useEffect(() => {
     if (textareaRef.current) {
-      // Reset height to auto to get correct scrollHeight
       textareaRef.current.style.height = 'auto';
-      // Calculate new height: if empty/single line, force 40px. Else use scrollHeight.
-      // 150px is the max height cap
       const scrollHeight = textareaRef.current.scrollHeight;
       const newHeight = Math.min(Math.max(scrollHeight, 40), 150);
       textareaRef.current.style.height = `${newHeight}px`;
@@ -66,23 +119,18 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
 
   return (
     <div 
-      className="fixed bottom-0 right-0 p-4 z-20 flex justify-center items-end pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] w-full md:w-auto"
-      style={{ 
-        // Mobile: Always 100% width, Left 0.
-        // Desktop: dynamic width/left based on sidebar.
-      }}
+      className={`fixed bottom-0 right-0 z-20 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+        w-full ${isSidebarOpen ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
+      `}
     >
-      {/* Wrapper to handle desktop positioning via CSS classes instead of inline styles for better responsiveness */}
-      <div 
-        className={`w-full flex justify-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
-          ${isSidebarOpen ? 'md:pl-[20rem]' : 'md:pl-0'}
-        `}
-      >
-        <div className="w-full max-w-2xl pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
+      {/* Gradient Fade for seamless scroll feel */}
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-cyber-black via-cyber-black/90 to-transparent pointer-events-none"></div>
+
+      <div className="relative w-full max-w-3xl mx-auto px-4 pb-6 pt-4">
           
           {/* Attachment HUD Preview */}
           {attachment && (
-            <div className="mb-4 mx-2 animate-fade-in-up origin-bottom">
+            <div className="mb-4 animate-fade-in-up origin-bottom">
               <div className="relative w-full max-w-md mx-auto">
                 <div className="relative rounded-2xl overflow-hidden bg-black/80 backdrop-blur-xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] group">
                   {/* Decorative Elements */}
@@ -90,12 +138,9 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
                   <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-cyber-accent/50 rounded-tr-lg z-20"></div>
                   <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-cyber-accent/50 rounded-bl-lg z-20"></div>
                   <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-cyber-accent/50 rounded-br-lg z-20"></div>
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyber-accent to-transparent opacity-70 shadow-[0_0_10px_#00f3ff]"></div>
-
-                  {/* Image Area */}
+                  
                   <div className="relative p-1 bg-white/5">
                      <div className="relative rounded-lg overflow-hidden bg-cyber-black/50 min-h-[150px] max-h-[250px] flex items-center justify-center">
-                       <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
                        <img src={attachment.preview} alt="Preview" className="relative z-10 w-full h-full object-contain max-h-[250px]" />
                      </div>
                   </div>
@@ -107,12 +152,12 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
                         <span className="text-[9px] font-mono tracking-[0.2em] uppercase">Visual Data Ready</span>
                      </div>
                      <div className="flex gap-2">
-                        <button onClick={() => setAttachment(null)} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all active:scale-95 group/cancel">
-                          <Trash2 size={12} className="group-hover/cancel:text-red-300" />
+                        <button onClick={() => setAttachment(null)} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all active:scale-95">
+                          <Trash2 size={12} />
                           <span className="text-[10px] font-bold tracking-wide">DISCARD</span>
                         </button>
-                        <button onClick={() => handleSubmit()} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyber-accent/10 hover:bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/20 transition-all active:scale-95 group/confirm">
-                          <Check size={12} className="group-hover/confirm:scale-110" />
+                        <button onClick={() => handleSubmit()} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyber-accent/10 hover:bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/20 transition-all active:scale-95">
+                          <Check size={12} />
                           <span className="text-[10px] font-bold tracking-wide">SEND</span>
                         </button>
                      </div>
@@ -125,11 +170,12 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
           {/* Input Container */}
           <div className={`
             relative flex items-end gap-2 p-1.5 rounded-[26px] backdrop-blur-2xl border transition-all duration-500
-            ${isFocused 
+            ${isFocused || isListening
               ? 'bg-white/10 border-white/20 shadow-[0_0_40px_rgba(0,243,255,0.15)]' 
               : 'bg-white/5 border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]'}
           `}>
             
+            {/* Top highlight */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50"></div>
 
             <input 
@@ -140,7 +186,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
               className="hidden" 
             />
 
-            {/* Attachment Button: Fixed 40px Size */}
+            {/* Attachment Button */}
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading}
@@ -148,14 +194,27 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
                 w-10 h-10 rounded-full flex-shrink-0 transition-all duration-300
                 flex items-center justify-center
                 text-gray-400 hover:text-white hover:bg-white/10 active:scale-95
-                disabled:opacity-50 disabled:cursor-not-allowed
+                disabled:opacity-50
               `}
               title="Attach image"
             >
               <Paperclip size={20} />
             </button>
 
-            {/* Text Input - Metrics Matched to Buttons */}
+            {/* TTS Toggle Button */}
+            <button
+              onClick={onToggleSpeech}
+              className={`
+                w-10 h-10 rounded-full flex-shrink-0 transition-all duration-300
+                flex items-center justify-center active:scale-95
+                ${isSpeechEnabled ? 'text-cyber-accent hover:bg-cyber-accent/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}
+              `}
+              title={isSpeechEnabled ? "Bot Voice: ON" : "Bot Voice: OFF"}
+            >
+              {isSpeechEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+
+            {/* Text Input */}
             <textarea
               ref={textareaRef}
               value={input}
@@ -163,7 +222,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder="Message Oryon..."
+              placeholder={isListening ? "Listening..." : "Message Oryon..."}
               disabled={isLoading}
               className={`
                 flex-grow bg-transparent focus:outline-none resize-none font-sans text-[15px] transition-colors duration-300
@@ -175,7 +234,22 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
               style={{ height: '40px' }} 
             />
 
-            {/* Send Button: Fixed 40px Size */}
+            {/* Voice Input Button */}
+            <button
+              onClick={toggleListening}
+              className={`
+                w-10 h-10 rounded-full flex-shrink-0 transition-all duration-300
+                flex items-center justify-center active:scale-95
+                ${isListening 
+                    ? 'bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'}
+              `}
+              title="Voice Input"
+            >
+              {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+            </button>
+
+            {/* Send Button */}
             <button
               onClick={() => handleSubmit()}
               disabled={(!input.trim() && !attachment) || isLoading}
@@ -193,12 +267,11 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
           </div>
           
           {/* Footer Text */}
-          <div className="text-center mt-3 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="text-center mt-3 opacity-60">
              <p className="text-[9px] font-mono tracking-[0.3em] text-gray-600 drop-shadow-sm">
-               NEURAL ENGINE v2.5
+               Made By Hernata FTIG
              </p>
           </div>
-        </div>
       </div>
     </div>
   );

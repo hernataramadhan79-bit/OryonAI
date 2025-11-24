@@ -30,9 +30,10 @@ const App: React.FC = () => {
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<Agent>(AGENTS[0]);
 
+  // Voice/TTS State
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
+
   // Responsive Sidebar Logic
-  // On Mobile: Sidebar is an overlay.
-  // On Desktop: Sidebar pushes content.
   const isSidebarOpen = isSidebarPinned || isSidebarHovered;
 
   // Load Memory (Multi-Agent)
@@ -113,6 +114,28 @@ const App: React.FC = () => {
     }
   }, [messages, currentUser, isMemoryLoaded, currentAgent.id]);
 
+  // Speech Synthesis Helper
+  const speakText = (text: string) => {
+    if (!isSpeechEnabled || !window.speechSynthesis) return;
+    
+    // Cancel previous speech
+    window.speechSynthesis.cancel();
+
+    // Clean text for speech (remove markdown symbols roughly)
+    const cleanText = text.replace(/[*_#`]/g, '');
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    
+    // Select voice (Prefer Google US English or generic English)
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.name.includes('Google US English')) || voices.find(v => v.lang.startsWith('en'));
+    if (preferredVoice) utterance.voice = preferredVoice;
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const setInitialWelcome = (name: string, agent: Agent) => {
     let welcomeText = "";
     switch(agent.id) {
@@ -133,6 +156,9 @@ const App: React.FC = () => {
     
     setMessages([welcomeMsg]);
     initializeChat([], agent.systemInstruction);
+    
+    // Optionally speak welcome message if enabled (default off though)
+    if (isSpeechEnabled) speakText(welcomeText);
   };
 
   const scrollToBottom = () => {
@@ -154,11 +180,13 @@ const App: React.FC = () => {
     setHistoryStore({});
     setIsMemoryLoaded(false);
     resetChat();
+    window.speechSynthesis.cancel();
   };
 
   const handleAgentChange = (newAgent: Agent) => {
     if (newAgent.id === currentAgent.id) return;
-    
+    window.speechSynthesis.cancel();
+
     const updatedStore = {
         ...historyStore,
         [currentAgent.id]: messages
@@ -248,10 +276,14 @@ const App: React.FC = () => {
           : msg
       )
     );
+
+    // Speak the final text
+    speakText(accumulatedText);
   };
 
   const handleSendMessage = async (text: string, attachment?: { data: string; mimeType: string }) => {
     setError(null);
+    window.speechSynthesis.cancel(); // Stop any current speaking
     
     const userMessage: Message = {
       id: uuidv4(),
@@ -285,13 +317,14 @@ const App: React.FC = () => {
             setMessages((prev) => [...prev, loadingMsg]);
 
             const base64Image = await generateImage(text, attachment);
+            const successText = "Art generated successfully.";
 
             setMessages((prev) => 
               prev.map((msg) => 
                 msg.id === aiMessageId 
                   ? { 
                       ...msg, 
-                      text: "Art generated successfully.", 
+                      text: successText, 
                       imageUrl: base64Image,
                       type: 'image',
                       isStreaming: false 
@@ -299,6 +332,7 @@ const App: React.FC = () => {
                   : msg
               )
             );
+            speakText(successText);
          }
       }
 
@@ -317,7 +351,7 @@ const App: React.FC = () => {
 
   const handleClearChat = () => {
     if (!currentUser) return;
-    
+    window.speechSynthesis.cancel();
     resetChat();
     
     const updatedStore = {
@@ -329,13 +363,15 @@ const App: React.FC = () => {
     const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
     localStorage.setItem(userStorageKey, JSON.stringify(updatedStore));
 
+    const clearMsg = "Module memory cache cleared. Starting new session.";
     setMessages([{
       id: uuidv4(),
       role: 'model',
-      text: "Module memory cache cleared. Starting new session.",
+      text: clearMsg,
       timestamp: Date.now(),
       type: 'text'
     }]);
+    if (isSpeechEnabled) speakText(clearMsg);
     setError(null);
   };
 
@@ -464,6 +500,8 @@ const App: React.FC = () => {
           onSend={handleSendMessage} 
           isLoading={isLoading} 
           isSidebarOpen={isSidebarOpen}
+          isSpeechEnabled={isSpeechEnabled}
+          onToggleSpeech={() => setIsSpeechEnabled(!isSpeechEnabled)}
         />
       </div>
       
