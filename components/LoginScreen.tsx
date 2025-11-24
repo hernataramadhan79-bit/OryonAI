@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowRight, Lock, User as UserIcon, Cpu, Ghost, Sparkles, Globe } from 'lucide-react';
+import { ArrowRight, Lock, User as UserIcon, Cpu, Sparkles } from 'lucide-react';
 import { loginUser, registerUser, loginAsGuest } from '../services/authService';
-import { User, LanguageCode } from '../types';
-import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
+import { User } from '../types';
+import { getTranslation } from '../utils/translations';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -34,9 +34,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en');
-
-  const t = getTranslation(currentLanguage);
+  
+  // Default to English for the Login Screen as requested
+  const t = getTranslation('en');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +54,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         if (!displayName) throw new Error("Display name is required");
         user = registerUser(username, password, displayName);
       }
-      // Attach selected language to user session
-      user.language = currentLanguage;
+      // Initialize user with English (can be changed inside app)
+      user.language = 'en';
       onLoginSuccess(user);
     } catch (err: any) {
       setError(err.message);
@@ -67,7 +67,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     setLoading(true);
     await new Promise(resolve => setTimeout(resolve, 600)); 
     const user = loginAsGuest();
-    user.language = currentLanguage;
+    user.language = 'en';
     onLoginSuccess(user);
   };
 
@@ -91,25 +91,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             ORYON
           </h1>
           <p className="text-gray-500 text-[10px] font-mono mt-3 tracking-[0.4em] uppercase opacity-70">Neural Link Interface</p>
-        </div>
-
-        {/* Language Switcher */}
-        <div className="flex justify-center mb-6 gap-2">
-           {SUPPORTED_LANGUAGES.map((lang) => (
-             <button
-               key={lang.code}
-               onClick={() => setCurrentLanguage(lang.code)}
-               className={`
-                 w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all duration-300
-                 ${currentLanguage === lang.code 
-                    ? 'bg-white/10 border border-cyber-accent/50 scale-110 shadow-[0_0_15px_rgba(0,243,255,0.3)]' 
-                    : 'bg-transparent opacity-50 hover:opacity-100 hover:bg-white/5'}
-               `}
-               title={lang.name}
-             >
-               {lang.flag}
-             </button>
-           ))}
         </div>
 
         {/* Glass Card */}
