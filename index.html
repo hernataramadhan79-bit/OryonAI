@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
     <title>OryonAI</title>
-    <!-- Fallback polyfill for process.env to ensure compatibility with libraries expecting node environment -->
+    <!-- Fallback polyfill for process.env -->
     <script>
       window.process = { env: {} };
     </script>
@@ -28,7 +28,6 @@
 </head>
   <body>
     <div id="root"></div>
-    <!-- CRITICAL: This connects the HTML to your React Code -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

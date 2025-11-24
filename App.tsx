@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GenerateContentResponse, Content, Part } from "@google/genai";
-import { Trash2, AlertCircle, Database, LogOut, User as UserIcon, Menu, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon } from 'lucide-react';
+import { Trash2, AlertCircle, LogOut, Menu, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, User, Agent, LanguageCode } from './types';
 import { sendMessageStream, resetChat, generateImage, initializeChat, analyzeInputIntent, AGENTS } from './services/geminiService';
@@ -505,71 +504,79 @@ const App: React.FC = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 text-[10px] font-mono px-3 py-1.5 rounded-full border backdrop-blur-md transition-all duration-500 text-cyber-accent bg-cyber-accent/5 border-cyber-accent/20 shadow-[0_0_15px_rgba(0,243,255,0.1)]">
-              <Database size={12} />
-              <span>{t.memLink}: {currentUser.username.toUpperCase()}</span>
+            <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-gray-400">
+               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+               <span className="tracking-widest">{currentUser.username.toUpperCase()}</span>
+            </div>
+
+            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border border-white/10 text-xs font-bold text-cyber-accent">
+               {currentUser.avatarInitials}
             </div>
             
-            <div className="flex items-center gap-3">
-               <div className="hidden md:flex items-center gap-3 group cursor-default pl-4 border-l border-white/10">
-                  <span className="text-sm font-medium text-gray-300 tracking-wide">
-                    {currentUser.displayName}
-                  </span>
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all duration-300 bg-gradient-to-br from-white/10 to-white/5 border-white/10 text-white shadow-lg">
-                    {currentUser.avatarInitials}
-                  </div>
-               </div>
-               
-               {/* Action Buttons */}
-               <div className="flex gap-2">
-                  <button onClick={handleClearChat} className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 text-gray-400 transition-all duration-300 active:scale-90" title={t.clearChat}>
-                     <Trash2 size={16} />
-                  </button>
-                  <button onClick={handleLogout} className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5 hover:bg-white/10 hover:text-white text-gray-400 transition-all duration-300 active:scale-90" title={t.logout}>
-                     <LogOut size={16} />
-                  </button>
-               </div>
-            </div>
+            <button 
+               onClick={handleLogout}
+               className="p-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all active:scale-95"
+               title={t.logout}
+            >
+               <LogOut size={16} />
+            </button>
           </div>
         </header>
 
-        {/* Main Chat Area */}
-        <main className="flex-grow pt-28 pb-40 px-4 md:px-0 w-full max-w-4xl mx-auto relative z-0">
-          {messages.map((msg) => (
-            <ChatMessage 
-              key={msg.id} 
-              message={msg} 
-              agentTheme={currentAgent.themeColor}
-            />
-          ))}
+        {/* Chat Area */}
+        <main className="flex-grow overflow-y-auto overflow-x-hidden p-4 md:p-8 pt-24 pb-32 custom-scrollbar flex flex-col items-center">
+            <div className="w-full max-w-3xl">
+               {messages.map((msg) => (
+                 <ChatMessage 
+                   key={msg.id} 
+                   message={msg} 
+                   agentTheme={currentAgent.themeColor}
+                 />
+               ))}
+               
+               {isLoading && !messages.some(m => m.isStreaming) && (
+                 <div className="flex justify-start w-full mb-8 animate-fade-in-up">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 mr-4 ${currentAgent.themeColor}`}>
+                       <Cpu size={16} className="animate-spin-slow" />
+                    </div>
+                 </div>
+               )}
+               
+               {error && (
+                 <div className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-3 mb-6 animate-pulse">
+                    <AlertCircle size={20} />
+                    <span className="text-sm font-mono">{error}</span>
+                 </div>
+               )}
 
-          {error && (
-            <div className="flex items-center justify-center my-4 text-red-300 gap-2 p-4 bg-red-900/10 border border-red-500/20 rounded-2xl animate-fade-in-up mx-4 md:mx-0 backdrop-blur-md shadow-lg">
-              <AlertCircle size={18} className="flex-shrink-0" />
-              <span className="text-xs font-mono uppercase tracking-wide">{error}</span>
+               <div ref={messagesEndRef} />
             </div>
-          )}
-
-          <div ref={messagesEndRef} />
         </main>
+
+        {/* Floating Controls (Clear Chat) */}
+        {messages.length > 0 && (
+          <div className={`fixed z-10 transition-all duration-300 ${isSidebarPinned ? 'bottom-24 right-8' : 'bottom-24 right-4 md:right-8'}`}>
+             <button
+               onClick={handleClearChat}
+               className="p-3 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all shadow-lg backdrop-blur-sm group"
+               title={t.clearChat}
+             >
+                <Trash2 size={18} className="group-hover:rotate-12 transition-transform" />
+             </button>
+          </div>
+        )}
 
         {/* Input Area */}
         <InputArea 
           onSend={handleSendMessage} 
-          isLoading={isLoading} 
+          isLoading={isLoading}
           isSidebarPinned={isSidebarPinned}
           isSpeechEnabled={isSpeechEnabled}
           onToggleSpeech={() => setIsSpeechEnabled(!isSpeechEnabled)}
           currentLanguage={currentLanguage}
           agentTheme={currentAgent.themeColor}
         />
-      </div>
-      
-      {/* Dynamic Background FX */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden transition-all duration-1000">
-        <div className={`absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[150px] transition-all duration-1000 opacity-40 mix-blend-screen animate-pulse-slow ${currentAgent.themeColor.includes('text-pink') ? 'bg-pink-600/20' : currentAgent.themeColor.includes('text-green') ? 'bg-green-600/20' : 'bg-cyan-600/20'}`}></div>
-        <div className={`absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[150px] transition-all duration-1000 opacity-30 mix-blend-screen animate-pulse-slow ${currentAgent.themeColor.includes('text-pink') ? 'bg-purple-600/20' : 'bg-purple-900/30'}`} style={{ animationDelay: '2s' }}></div>
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+
       </div>
     </div>
   );

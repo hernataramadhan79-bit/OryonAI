@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { SendHorizontal, Paperclip, Trash2, Check, ScanLine, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { LanguageCode, LanguageDefinition } from '../types';
@@ -162,12 +161,13 @@ const InputArea: React.FC<InputAreaProps> = ({
     <div 
       className={`fixed bottom-0 right-0 z-20 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         w-full ${isSidebarPinned ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
+        pb-[env(safe-area-inset-bottom)] bg-cyber-black/80 backdrop-blur-md
       `}
     >
-      {/* Gradient Fade for seamless scroll feel */}
-      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-cyber-black via-cyber-black/90 to-transparent pointer-events-none"></div>
+      {/* Gradient Fade for seamless scroll feel - Positioned above the container */}
+      <div className="absolute -top-32 left-0 w-full h-32 bg-gradient-to-t from-cyber-black via-cyber-black/90 to-transparent pointer-events-none"></div>
 
-      <div className="relative w-full max-w-3xl mx-auto px-4 pb-6 pt-4">
+      <div className="relative w-full max-w-3xl mx-auto px-4 pb-4 pt-2">
           
           {/* Attachment HUD Preview */}
           {attachment && (

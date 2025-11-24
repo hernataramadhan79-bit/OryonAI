@@ -1,4 +1,3 @@
-
 import React, { useState, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -26,39 +25,35 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
   if (!inline && match) {
     return (
-      <div className="my-8 rounded-2xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm shadow-xl w-full max-w-full group transition-all duration-300 hover:border-white/20 hover:shadow-2xl">
+      <div className="my-6 rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm shadow-xl w-full max-w-full group transition-all duration-300 hover:border-white/20">
         {/* Header Language Label */}
         <div className="bg-white/5 px-4 py-2 border-b border-white/5 flex items-center justify-between">
           <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">
             {match[1]}
           </span>
-        </div>
-        
-        {/* Code Area */}
-        <div className="p-5 overflow-x-auto custom-scrollbar">
-          <code className={className} {...props}>
-            {children}
-          </code>
-        </div>
-
-        {/* Footer with Copy Button */}
-        <div className="bg-white/5 px-4 py-2 border-t border-white/5 flex justify-end">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300 active:scale-95"
+            className="flex items-center gap-2 px-2 py-1 rounded-lg text-[10px] font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-95"
           >
             {isCopied ? (
               <>
-                <Check size={14} className="text-green-400" />
-                <span className="text-green-400">Copied!</span>
+                <Check size={12} className="text-green-400" />
+                <span className="text-green-400">COPIED</span>
               </>
             ) : (
               <>
-                <Copy size={14} />
-                <span>Copy Code</span>
+                <Copy size={12} />
+                <span>COPY</span>
               </>
             )}
           </button>
+        </div>
+        
+        {/* Code Area */}
+        <div className="p-4 overflow-x-auto custom-scrollbar">
+          <code className={className} {...props}>
+            {children}
+          </code>
         </div>
       </div>
     );
@@ -98,7 +93,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
 
   return (
     <div 
-      className={`flex w-full mb-8 opacity-0 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
+      className={`flex w-full mb-6 md:mb-8 opacity-0 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
       style={containerStyle}
     >
       
@@ -107,22 +102,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
         <style>{`
           @keyframes ${pulseAnimationName} {
             0% { box-shadow: 0 0 0px ${hexColor}00; border-color: rgba(255,255,255,0.1); }
-            50% { box-shadow: 0 0 20px ${hexColor}20; border-color: ${hexColor}60; }
+            50% { box-shadow: 0 0 15px ${hexColor}15; border-color: ${hexColor}50; }
             100% { box-shadow: 0 0 0px ${hexColor}00; border-color: rgba(255,255,255,0.1); }
           }
         `}</style>
       )}
 
-      <div className={`flex max-w-[95%] md:max-w-[85%] gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`flex max-w-[95%] md:max-w-[85%] gap-3 md:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
         
         {/* Avatar - Glassy */}
         <div className={`
-          flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-2xl flex items-center justify-center border backdrop-blur-xl mt-1 transition-all duration-500 shadow-lg group
+          flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center border backdrop-blur-xl mt-1 transition-all duration-500 shadow-lg group
           ${isUser 
             ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' 
             : `bg-white/5 border-white/10 ${themeColor} hover:bg-white/10`}
         `}>
-          {isUser ? <User size={16} className="md:w-[18px] md:h-[18px] transition-transform duration-500 group-hover:scale-110" /> : <Bot size={16} className="md:w-[18px] md:h-[18px] transition-transform duration-500 group-hover:scale-110" />}
+          {isUser ? <User size={16} className="md:w-[18px] md:h-[18px]" /> : <Bot size={16} className="md:w-[18px] md:h-[18px]" />}
         </div>
 
         {/* Content Bubble */}
@@ -134,18 +129,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
           <div 
             style={isStreaming && !isUser ? { animation: `${pulseAnimationName} 2s infinite ease-in-out` } : {}}
             className={`
-            group relative px-5 py-4 md:px-6 md:py-5 text-[14px] md:text-[15px] leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full backdrop-blur-xl shadow-sm
+            group relative px-5 py-4 text-[14px] md:text-[15px] leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full backdrop-blur-xl shadow-sm
             ${isUser 
-              ? 'bg-white/10 text-gray-100 rounded-[2rem] rounded-tr-sm border border-white/10 w-fit hover:bg-white/15 hover:shadow-[0_8px_30px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:scale-[0.98]' 
-              : `bg-black/20 text-gray-200 rounded-[2rem] rounded-tl-sm border border-white/5 border-l-2 ${borderColor} w-full hover:bg-black/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] active:scale-[0.99]`} 
-            ${isImage ? 'p-0 bg-transparent border-none shadow-none w-fit !backdrop-blur-0 hover:bg-transparent hover:shadow-none hover:translate-y-0 active:scale-100' : ''}
+              ? 'bg-white/10 text-gray-100 rounded-[1.5rem] rounded-tr-sm border border-white/10 w-fit' 
+              : `bg-black/40 text-gray-200 rounded-[1.5rem] rounded-tl-sm border border-white/5 border-l-2 ${borderColor} w-full`} 
+            ${isImage ? 'p-0 bg-transparent border-none shadow-none w-fit !backdrop-blur-0' : ''}
           `}>
             
-            {/* Glass Top Highlight (Liquid Effect) */}
-            {!isImage && (
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            )}
-
             {/* User Uploaded Attachment */}
             {message.attachment && (
               <div className="mb-4 rounded-xl overflow-hidden border border-white/10 bg-black/30 shadow-lg inline-block">
@@ -160,11 +150,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
 
             {/* Generated Image Message */}
             {isImage && message.imageUrl ? (
-              <div className="group/image relative rounded-[2rem] overflow-hidden border border-white/10 bg-black/50 shadow-2xl transition-transform duration-500 hover:scale-[1.02]">
+              <div className="group/image relative rounded-[1.5rem] overflow-hidden border border-white/10 bg-black/50 shadow-2xl transition-transform duration-500">
                 <img 
                   src={`data:image/jpeg;base64,${message.imageUrl}`} 
                   alt="Generated Art" 
-                  className="w-full h-auto max-w-md object-cover transition-transform duration-700 group-hover/image:scale-105"
+                  className="w-full h-auto max-w-md object-cover"
                   loading="lazy"
                 />
                 <div className="absolute top-3 right-3 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300">
@@ -194,15 +184,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                          /* Typography Updates for Structured Response */
                          
                          /* Paragraphs */
-                         prose-p:text-gray-300 prose-p:leading-7 md:prose-p:leading-8 prose-p:mb-4 last:prose-p:mb-0 prose-p:font-sans
+                         prose-p:text-gray-300 prose-p:leading-7 prose-p:mb-4 last:prose-p:mb-0 prose-p:font-sans
                          
-                         /* Headings - Enhanced Visuals - Using Dynamic CSS Var */
-                         prose-headings:text-white prose-headings:font-bold prose-headings:font-sans prose-headings:mt-8 prose-headings:mb-4 prose-headings:pb-2 prose-headings:border-b prose-headings:border-white/10
-                         prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg
+                         /* Headings - Enhanced Visuals */
+                         prose-headings:text-white prose-headings:font-bold prose-headings:font-mono prose-headings:mt-8 prose-headings:mb-4 prose-headings:pb-2 prose-headings:border-b prose-headings:border-white/10
+                         prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-h3:text-[var(--agent-accent)] prose-h3:border-none
                          
                          /* Lists - Colored Markers using Dynamic CSS Var */
-                         prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-gray-300 prose-ul:space-y-2
-                         prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-gray-300 prose-ol:space-y-2
+                         prose-ul:my-4 prose-ul:list-disc prose-ul:pl-4 prose-ul:text-gray-300 prose-ul:space-y-2
+                         prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-4 prose-ol:text-gray-300 prose-ol:space-y-2
                          [&_li::marker]:text-[var(--agent-accent)]
                          
                          /* Links */
@@ -210,18 +200,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                          
                          /* Table Styling - Tech Data Grid */
                          prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:text-sm prose-table:bg-white/5 prose-table:rounded-lg prose-table:overflow-hidden
-                         prose-thead:bg-white/10 prose-thead:border-b prose-thead:border-white/10
-                         prose-th:text-left prose-th:p-4 prose-th:text-[var(--agent-accent)] prose-th:font-bold prose-th:uppercase prose-th:tracking-wider prose-th:text-[10px]
-                         prose-td:p-4 prose-td:border-b prose-td:border-white/5 prose-td:text-gray-300
+                         prose-thead:bg-white/5 prose-thead:border-b prose-thead:border-white/10
+                         prose-th:text-left prose-th:p-3 prose-th:text-[var(--agent-accent)] prose-th:font-bold prose-th:uppercase prose-th:tracking-wider prose-th:text-[10px] prose-th:font-mono
+                         prose-td:p-3 prose-td:border-b prose-td:border-white/5 prose-td:text-gray-300
                          
                          /* Blockquote */
-                         prose-blockquote:border-l-4 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/5 prose-blockquote:pl-5 prose-blockquote:py-4 prose-blockquote:my-6 prose-blockquote:pr-4 prose-blockquote:rounded-r-xl prose-blockquote:text-gray-300 prose-blockquote:italic prose-blockquote:font-medium
+                         prose-blockquote:border-l-2 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/5 prose-blockquote:pl-4 prose-blockquote:py-3 prose-blockquote:my-4 prose-blockquote:rounded-r-lg prose-blockquote:text-gray-400 prose-blockquote:italic
                          
                          /* Strong/Bold */
-                         prose-strong:text-white prose-strong:font-extrabold prose-strong:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]
+                         prose-strong:text-white prose-strong:font-bold
                          
                          /* HR */
-                         prose-hr:border-white/20 prose-hr:border-t-2 prose-hr:my-8 prose-hr:w-full prose-hr:rounded-full
+                         prose-hr:border-white/10 prose-hr:my-8
                        ">
                          <ReactMarkdown 
                            remarkPlugins={[remarkGfm]}
@@ -241,8 +231,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
           
           {/* Timestamp */}
           {!isUser && (
-            <span className="text-[10px] text-gray-500 mt-2 ml-2 font-mono opacity-60 tracking-wider">
-               ORYON • {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <span className="text-[9px] text-gray-600 mt-2 ml-2 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+               {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>
