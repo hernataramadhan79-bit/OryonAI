@@ -1,8 +1,19 @@
 import { GoogleGenAI, Chat, GenerateContentResponse, Content, Part } from "@google/genai";
 import { Agent } from "../types";
 
-// Initialize the Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize the Gemini Client Safely
+// We assume process.env.API_KEY is available (polyfilled by vite.config.ts)
+// If it's missing or empty, we initialize with a placeholder to prevent immediate crash, 
+// allowing the UI to render and then fail gracefully when a request is made.
+let ai: GoogleGenAI;
+try {
+  // Use 'process.env.API_KEY' exactly as instructed
+  ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "MISSING_KEY_PLACEHOLDER" });
+} catch (error) {
+  console.error("Critical: Failed to initialize Gemini Client.", error);
+  // Fallback to avoid app crash loop, though requests will fail.
+  ai = new GoogleGenAI({ apiKey: "INVALID_KEY" });
+}
 
 const MODEL_NAME = 'gemini-2.5-flash';
 const IMAGE_MODEL_NAME = 'gemini-2.5-flash-image';
@@ -213,8 +224,12 @@ export const sendMessageStream = async (
          message: messagePayload
        });
 
-    } catch (retryError) {
+    } catch (retryError: any) {
        console.error("Retry failed:", retryError);
+       // Customize error if key is missing
+       if (retryError.message?.includes('API key') || retryError.message?.includes('403')) {
+         throw new Error("API Key Invalid or Missing. Please check Vercel settings.");
+       }
        throw retryError;
     }
   }
@@ -309,6 +324,9 @@ export const generateImage = async (prompt: string, attachment?: { data: string;
     throw new Error("No image generated in response.");
   } catch (error: any) {
     console.error("Error generating image:", error);
+    if (error.message?.includes('API key')) {
+        throw new Error("Missing API Key. Cannot generate image.");
+    }
     throw error;
   }
 };
