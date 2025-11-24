@@ -84,7 +84,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
   
   // Check if message is actively streaming
   const isStreaming = !!message.isStreaming;
-  const pulseAnimationName = `pulse-border-${message.id}`;
 
   // CSS Variable for Agent Accent Color to be used in Prose
   const containerStyle = {
@@ -93,21 +92,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
 
   return (
     <div 
-      className={`flex w-full mb-8 md:mb-10 opacity-0 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
+      className={`flex w-full mb-8 md:mb-10 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
       style={containerStyle}
     >
       
-      {/* Dynamic Keyframes for pulsing border matched to agent theme */}
-      {isStreaming && !isUser && (
-        <style>{`
-          @keyframes ${pulseAnimationName} {
-            0% { box-shadow: 0 0 0px ${hexColor}00; border-color: rgba(255,255,255,0.1); }
-            50% { box-shadow: 0 0 15px ${hexColor}15; border-color: ${hexColor}50; }
-            100% { box-shadow: 0 0 0px ${hexColor}00; border-color: rgba(255,255,255,0.1); }
-          }
-        `}</style>
-      )}
-
       <div className={`flex max-w-full md:max-w-[85%] gap-2 md:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
         
         {/* Avatar - Glassy */}
@@ -127,7 +115,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
           min-w-0 w-full
         `}>
           <div 
-            style={isStreaming && !isUser ? { animation: `${pulseAnimationName} 2s infinite ease-in-out` } : {}}
+            style={isStreaming && !isUser ? { 
+              boxShadow: `0 0 15px ${hexColor}15`,
+              borderColor: `${hexColor}50`
+            } : {}}
             className={`
             group relative px-4 md:px-5 py-3 md:py-4 text-[14px] md:text-[15px] leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] max-w-full backdrop-blur-xl shadow-sm
             ${isUser 

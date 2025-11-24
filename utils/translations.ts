@@ -61,7 +61,7 @@ export const TRANSLATIONS = {
     systemStatus: "STATUS",
     online: "ONLINE",
     selectModel: "PILIH MODEL",
-    messagePlaceholder: "Ketik pesan...",
+    messagePlaceholder: "Ketik...",
     listening: "Mendengarkan...",
     send: "KIRIM",
     discard: "HAPUS",
@@ -106,48 +106,48 @@ export const TRANSLATIONS = {
     aiWelcome: "オンライン。目的は？",
     aiClear: "クリアしました。",
     visualProcessing: "処理中...",
-    visualSuccess: "完了。",
+    visualSuccess: "生成完了。",
     errorGeneric: "エラー。",
   },
   es: {
     welcome: "Bienvenido",
-    init: "Inicio",
+    init: "Iniciar",
     displayName: "NOMBRE",
     username: "USUARIO",
     password: "CLAVE",
     placeholderName: "Nombre...",
     placeholderUser: "ID...",
     placeholderPass: "Clave...",
-    loginBtn: "ENTRAR",
+    loginBtn: "ACCEDER",
     registerBtn: "CREAR",
     guestBtn: "DEMO",
     processing: "...",
-    switchLogin: "Entrar",
+    switchLogin: "Login",
     switchRegister: "Registro",
     systemStatus: "ESTADO",
     online: "EN LÍNEA",
     selectModel: "MODELO",
     messagePlaceholder: "Mensaje...",
-    listening: "...",
+    listening: "Escuchando...",
     send: "ENVIAR",
     discard: "DESCARTAR",
     visualReady: "Listo",
     madeBy: "Por Hernata FTIG",
-    clearChat: "Borrar",
+    clearChat: "Limpiar",
     logout: "Salir",
-    memLink: "MEMORIA",
-    aiWelcome: "¿Objetivo hoy?",
+    memLink: "ENLACE",
+    aiWelcome: "sistemas en línea. ¿Objetivo?",
     aiClear: "Memoria borrada.",
     visualProcessing: "Procesando...",
-    visualSuccess: "Éxito.",
-    errorGeneric: "Error.",
+    visualSuccess: "Generado.",
+    errorGeneric: "Error del sistema.",
   },
   fr: {
     welcome: "Bienvenue",
-    init: "Init",
+    init: "Initialiser",
     displayName: "NOM",
-    username: "ID",
-    password: "MDP",
+    username: "ID UTILISATEUR",
+    password: "MOT DE PASSE",
     placeholderName: "Nom...",
     placeholderUser: "ID...",
     placeholderPass: "Clé...",
@@ -157,56 +157,56 @@ export const TRANSLATIONS = {
     processing: "...",
     switchLogin: "Connexion",
     switchRegister: "Inscription",
-    systemStatus: "ÉTAT",
+    systemStatus: "STATUT",
     online: "EN LIGNE",
     selectModel: "MODÈLE",
     messagePlaceholder: "Message...",
-    listening: "...",
+    listening: "Écoute...",
     send: "ENVOYER",
-    discard: "JETTER",
+    discard: "SUPPRIMER",
     visualReady: "Prêt",
     madeBy: "Par Hernata FTIG",
     clearChat: "Effacer",
-    logout: "Sortir",
-    memLink: "MÉMOIRE",
-    aiWelcome: "En ligne. Objectif ?",
-    aiClear: "Effacé.",
-    visualProcessing: "Traitement...",
-    visualSuccess: "Succès.",
-    errorGeneric: "Erreur.",
+    logout: "Déconnexion",
+    memLink: "LIEN",
+    aiWelcome: "systèmes en ligne. Objectif ?",
+    aiClear: "Mémoire effacée.",
+    visualProcessing: "Rendu...",
+    visualSuccess: "Généré.",
+    errorGeneric: "Erreur système.",
   },
   de: {
     welcome: "Willkommen",
-    init: "Start",
+    init: "Initialisieren",
     displayName: "NAME",
-    username: "ID",
-    password: "PW",
+    username: "BENUTZER",
+    password: "PASSWORT",
     placeholderName: "Name...",
     placeholderUser: "ID...",
-    placeholderPass: "Key...",
+    placeholderPass: "Schlüssel...",
     loginBtn: "ZUGRIFF",
     registerBtn: "ERSTELLEN",
     guestBtn: "DEMO",
     processing: "...",
     switchLogin: "Login",
-    switchRegister: "Neu",
+    switchRegister: "Registrieren",
     systemStatus: "STATUS",
     online: "ONLINE",
     selectModel: "MODELL",
     messagePlaceholder: "Nachricht...",
-    listening: "...",
+    listening: "Zuhören...",
     send: "SENDEN",
     discard: "VERWERFEN",
     visualReady: "Bereit",
     madeBy: "Von Hernata FTIG",
-    clearChat: "Leeren",
+    clearChat: "Löschen",
     logout: "Abmelden",
-    memLink: "SPEICHER",
-    aiWelcome: "Online. Ziel?",
-    aiClear: "Geleert.",
-    visualProcessing: "Verarbeitung...",
-    visualSuccess: "Erfolg.",
-    errorGeneric: "Fehler.",
+    memLink: "LINK",
+    aiWelcome: "Systeme online. Ziel?",
+    aiClear: "Speicher gelöscht.",
+    visualProcessing: "Rendern...",
+    visualSuccess: "Generiert.",
+    errorGeneric: "Systemfehler.",
   },
 };
 
@@ -214,13 +214,19 @@ export const getTranslation = (lang: LanguageCode) => {
   return TRANSLATIONS[lang] || TRANSLATIONS['en'];
 };
 
-export const getSystemLanguageInstruction = (lang: LanguageCode): string => {
+export const getSystemLanguageInstruction = (lang: LanguageCode) => {
   switch (lang) {
-    case 'id': return "\n\nIMPORTANT: You must ALWAYS respond in INDONESIAN (Bahasa Indonesia).";
-    case 'ja': return "\n\nIMPORTANT: You must ALWAYS respond in JAPANESE (日本語).";
-    case 'es': return "\n\nIMPORTANT: You must ALWAYS respond in SPANISH (Español).";
-    case 'fr': return "\n\nIMPORTANT: You must ALWAYS respond in FRENCH (Français).";
-    case 'de': return "\n\nIMPORTANT: You must ALWAYS respond in GERMAN (Deutsch).";
-    default: return "\n\nIMPORTANT: You must ALWAYS respond in ENGLISH.";
+    case 'id':
+      return "\n\n**IMPORTANT: YOU MUST REPLY IN INDONESIAN (BAHASA INDONESIA).**";
+    case 'ja':
+      return "\n\n**IMPORTANT: YOU MUST REPLY IN JAPANESE (日本語).**";
+    case 'es':
+      return "\n\n**IMPORTANT: YOU MUST REPLY IN SPANISH (ESPAÑOL).**";
+    case 'fr':
+      return "\n\n**IMPORTANT: YOU MUST REPLY IN FRENCH (FRANÇAIS).**";
+    case 'de':
+      return "\n\n**IMPORTANT: YOU MUST REPLY IN GERMAN (DEUTSCH).**";
+    default:
+      return ""; // English is default
   }
 };
