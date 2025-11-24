@@ -103,76 +103,86 @@ const Sidebar: React.FC<SidebarProps> = ({
         shadow-[20px_0_50px_rgba(0,0,0,0.3)] 
         transform-gpu transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        flex flex-col justify-between
       `}
       style={{ willChange: 'transform' }}
     >
-      {/* Header */}
-      <div className="p-6 md:p-8 border-b border-white/5 flex justify-between items-center relative overflow-hidden h-20">
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-        
-        <h2 className="text-lg md:text-xl font-mono font-bold text-white tracking-[0.2em] relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-          NEURAL LINK
-        </h2>
-        
-        {/* Pin/Unpin Toggle */}
-        <button 
-          onClick={onPinToggle}
-          className={`
-            p-2 rounded-full transition-all duration-300 active:scale-90
-            ${isPinned ? 'bg-white/10 text-cyber-accent' : 'text-gray-500 hover:text-white hover:bg-white/5'}
-          `}
-          title={isPinned ? "Unpin Sidebar" : "Pin Sidebar"}
-        >
-          {isPinned ? <Pin size={18} className="fill-current" /> : <PinOff size={18} />}
-        </button>
+      <div>
+        {/* Header */}
+        <div className="p-6 md:p-8 border-b border-white/5 flex justify-between items-center relative overflow-hidden h-20">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+          
+          <h2 className="text-lg md:text-xl font-mono font-bold text-white tracking-[0.2em] relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+            NEURAL LINK
+          </h2>
+          
+          {/* Pin/Unpin Toggle */}
+          <button 
+            onClick={onPinToggle}
+            className={`
+              p-2 rounded-full transition-all duration-300 active:scale-90
+              ${isPinned ? 'bg-white/10 text-cyber-accent' : 'text-gray-500 hover:text-white hover:bg-white/5'}
+            `}
+            title={isPinned ? "Unpin Sidebar" : "Pin Sidebar"}
+          >
+            {isPinned ? <Pin size={18} className="fill-current" /> : <PinOff size={18} />}
+          </button>
+        </div>
+
+        {/* Language Selector (Compact) */}
+        <div className="px-6 py-4 border-b border-white/5">
+          <div className="flex items-center gap-2 mb-2 text-gray-500 text-[10px] font-mono uppercase tracking-widest">
+            <Globe size={10} />
+            <span>Language Interface</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => onLanguageChange(lang.code)}
+                className={`
+                  px-1 py-1.5 rounded-lg text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-all
+                  ${currentLanguage === lang.code 
+                    ? 'bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30' 
+                    : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10 hover:text-white'}
+                `}
+              >
+                <span>{lang.flag}</span>
+                <span>{lang.code.toUpperCase()}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Agent List */}
+        <div className="p-4 md:p-6 space-y-4 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 350px)' }}>
+          <p className="text-[10px] font-mono text-gray-500 mb-2 md:mb-4 uppercase tracking-widest pl-2 opacity-70">{t.selectModel}</p>
+          
+          <div className="space-y-2 md:space-y-3">
+            {agents.map((agent) => (
+              <AgentItem 
+                key={agent.id} 
+                agent={agent} 
+                isActive={currentAgent.id === agent.id} 
+                onClick={() => onSelectAgent(agent)} 
+              />
+            ))}
+          </div>
+          
+          <div className="mt-8 md:mt-10 p-4 md:p-6 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+            <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
+              {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Language Selector (Compact) */}
-      <div className="px-6 py-4 border-b border-white/5">
-        <div className="flex items-center gap-2 mb-2 text-gray-500 text-[10px] font-mono uppercase tracking-widest">
-           <Globe size={10} />
-           <span>Language Interface</span>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-           {SUPPORTED_LANGUAGES.map((lang) => (
-             <button
-               key={lang.code}
-               onClick={() => onLanguageChange(lang.code)}
-               className={`
-                 px-1 py-1.5 rounded-lg text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-all
-                 ${currentLanguage === lang.code 
-                   ? 'bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30' 
-                   : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10 hover:text-white'}
-               `}
-             >
-               <span>{lang.flag}</span>
-               <span>{lang.code.toUpperCase()}</span>
-             </button>
-           ))}
-        </div>
-      </div>
-
-      {/* Agent List */}
-      <div className="p-4 md:p-6 space-y-4 overflow-y-auto h-[calc(100%-180px)] custom-scrollbar">
-        <p className="text-[10px] font-mono text-gray-500 mb-2 md:mb-4 uppercase tracking-widest pl-2 opacity-70">{t.selectModel}</p>
-        
-        <div className="space-y-2 md:space-y-3">
-          {agents.map((agent) => (
-            <AgentItem 
-              key={agent.id} 
-              agent={agent} 
-              isActive={currentAgent.id === agent.id} 
-              onClick={() => onSelectAgent(agent)} 
-            />
-          ))}
-        </div>
-        
-        <div className="mt-8 md:mt-10 p-4 md:p-6 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group">
-           <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-           <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
-             {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>
-           </p>
-        </div>
+      {/* Footer Credit */}
+      <div className="p-6 border-t border-white/5 bg-black/20">
+        <p className="text-[10px] font-mono text-center text-gray-600 tracking-widest uppercase hover:text-cyber-accent transition-colors duration-300 cursor-default">
+          Made By Hernata FTIG
+        </p>
       </div>
     </div>
   );

@@ -434,7 +434,18 @@ const App: React.FC = () => {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (!isMemoryLoaded) return null;
+  // FIX: Glitch Prevention. 
+  // Instead of returning null (white screen), return a dark loading state that matches the theme.
+  if (!isMemoryLoaded) {
+    return (
+      <div className="min-h-screen bg-cyber-black flex items-center justify-center">
+        <div className="relative">
+           <div className="w-12 h-12 rounded-full border-2 border-cyber-accent border-t-transparent animate-spin"></div>
+           <div className="absolute inset-0 bg-cyber-accent/20 blur-xl animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-cyber-black text-gray-200 overflow-hidden selection:bg-cyber-accent selection:text-black transition-colors duration-500">
@@ -564,8 +575,6 @@ const App: React.FC = () => {
                <div ref={messagesEndRef} />
             </div>
         </main>
-
-        {/* Floating Controls Removed - Now in Header */}
 
         {/* Input Area */}
         <InputArea 
