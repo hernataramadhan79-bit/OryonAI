@@ -171,7 +171,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
             className={`
-              p-4 rounded-full flex-shrink-0 transition-all duration-300 mb-1
+              p-4 rounded-full flex-shrink-0 transition-all duration-300
               text-gray-400 hover:text-white hover:bg-white/10 active:scale-95
               disabled:opacity-50 disabled:cursor-not-allowed
               flex items-center justify-center
@@ -182,7 +182,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
           </button>
 
           {/* Text Input */}
-          <div className="flex-grow relative py-3.5">
+          <div className="flex-grow relative py-4">
             <textarea
               ref={textareaRef}
               value={input}
@@ -195,7 +195,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, isSidebarOpen 
               className={`
                 w-full bg-transparent focus:outline-none resize-none font-sans text-[16px] leading-relaxed transition-colors duration-300
                 text-gray-100 placeholder-gray-500 caret-cyber-accent
-                custom-scrollbar
+                custom-scrollbar min-h-[24px]
               `}
               rows={1}
             />
