@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SendHorizontal, Paperclip, Trash2, Check, ScanLine, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { LanguageCode, LanguageDefinition } from '../types';
+import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 
 interface InputAreaProps {
   onSend: (text: string, attachment?: { data: string; mimeType: string }) => void;
@@ -7,6 +9,7 @@ interface InputAreaProps {
   isSidebarOpen: boolean;
   isSpeechEnabled: boolean;
   onToggleSpeech: () => void;
+  currentLanguage: LanguageCode;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({ 
@@ -14,7 +17,8 @@ const InputArea: React.FC<InputAreaProps> = ({
   isLoading, 
   isSidebarOpen,
   isSpeechEnabled,
-  onToggleSpeech
+  onToggleSpeech,
+  currentLanguage
 }) => {
   const [input, setInput] = useState('');
   const [attachment, setAttachment] = useState<{ data: string; mimeType: string; preview: string } | null>(null);
@@ -23,6 +27,9 @@ const InputArea: React.FC<InputAreaProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
   const [isFocused, setIsFocused] = useState(false);
+  
+  const t = getTranslation(currentLanguage);
+  const currentLangDef = SUPPORTED_LANGUAGES.find(l => l.code === currentLanguage) || SUPPORTED_LANGUAGES[0];
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -31,15 +38,15 @@ const InputArea: React.FC<InputAreaProps> = ({
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = false;
         recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = 'en-US'; // Default to English, can be dynamic
+        
+        // DYNAMIC LANGUAGE SETTING
+        recognitionRef.current.lang = currentLangDef.voiceCode;
 
         recognitionRef.current.onresult = (event: any) => {
             let transcript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 transcript += event.results[i][0].transcript;
             }
-            // Append to current input or replace? Usually replace for simple commands, append for dictation.
-            // Here we'll set it directly for smoothness.
             setInput(transcript);
         };
 
@@ -52,13 +59,16 @@ const InputArea: React.FC<InputAreaProps> = ({
             setIsListening(false);
         };
     }
-  }, []);
+  }, [currentLanguage, currentLangDef.voiceCode]); // Re-initialize when language changes
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
         alert("Voice input is not supported in this browser. Try Chrome or Edge.");
         return;
     }
+
+    // Ensure lang is updated before starting
+    recognitionRef.current.lang = currentLangDef.voiceCode;
 
     if (isListening) {
         recognitionRef.current.stop();
@@ -149,16 +159,16 @@ const InputArea: React.FC<InputAreaProps> = ({
                   <div className="flex items-center justify-between p-3 border-t border-white/10 bg-white/5">
                      <div className="flex items-center gap-2 text-cyber-accent/70 px-2">
                         <ScanLine size={14} className="animate-pulse" />
-                        <span className="text-[9px] font-mono tracking-[0.2em] uppercase">Visual Data Ready</span>
+                        <span className="text-[9px] font-mono tracking-[0.2em] uppercase">{t.visualReady}</span>
                      </div>
                      <div className="flex gap-2">
                         <button onClick={() => setAttachment(null)} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all active:scale-95">
                           <Trash2 size={12} />
-                          <span className="text-[10px] font-bold tracking-wide">DISCARD</span>
+                          <span className="text-[10px] font-bold tracking-wide">{t.discard}</span>
                         </button>
                         <button onClick={() => handleSubmit()} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyber-accent/10 hover:bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/20 transition-all active:scale-95">
                           <Check size={12} />
-                          <span className="text-[10px] font-bold tracking-wide">SEND</span>
+                          <span className="text-[10px] font-bold tracking-wide">{t.send}</span>
                         </button>
                      </div>
                   </div>
@@ -222,7 +232,7 @@ const InputArea: React.FC<InputAreaProps> = ({
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder={isListening ? "Listening..." : "Message Oryon..."}
+              placeholder={isListening ? t.listening : t.messagePlaceholder}
               disabled={isLoading}
               className={`
                 flex-grow bg-transparent focus:outline-none resize-none font-sans text-[15px] transition-colors duration-300
@@ -244,7 +254,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                     ? 'bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
                     : 'text-gray-400 hover:text-white hover:bg-white/10'}
               `}
-              title="Voice Input"
+              title={`Voice Input (${currentLangDef.name})`}
             >
               {isListening ? <MicOff size={20} /> : <Mic size={20} />}
             </button>
@@ -269,7 +279,7 @@ const InputArea: React.FC<InputAreaProps> = ({
           {/* Footer Text */}
           <div className="text-center mt-3 opacity-60">
              <p className="text-[9px] font-mono tracking-[0.3em] text-gray-600 drop-shadow-sm">
-               Made By Hernata FTIG
+               {t.madeBy}
              </p>
           </div>
       </div>

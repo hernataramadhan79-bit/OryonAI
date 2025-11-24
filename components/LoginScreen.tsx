@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowRight, Lock, User as UserIcon, Cpu, Ghost, Sparkles } from 'lucide-react';
+import { ArrowRight, Lock, User as UserIcon, Cpu, Ghost, Sparkles, Globe } from 'lucide-react';
 import { loginUser, registerUser, loginAsGuest } from '../services/authService';
-import { User } from '../types';
+import { User, LanguageCode } from '../types';
+import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -33,6 +34,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en');
+
+  const t = getTranslation(currentLanguage);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +54,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         if (!displayName) throw new Error("Display name is required");
         user = registerUser(username, password, displayName);
       }
+      // Attach selected language to user session
+      user.language = currentLanguage;
       onLoginSuccess(user);
     } catch (err: any) {
       setError(err.message);
@@ -59,8 +65,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
   const handleGuestLogin = async () => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 600)); // Slightly faster than auth
+    await new Promise(resolve => setTimeout(resolve, 600)); 
     const user = loginAsGuest();
+    user.language = currentLanguage;
     onLoginSuccess(user);
   };
 
@@ -86,6 +93,25 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           <p className="text-gray-500 text-[10px] font-mono mt-3 tracking-[0.4em] uppercase opacity-70">Neural Link Interface</p>
         </div>
 
+        {/* Language Switcher */}
+        <div className="flex justify-center mb-6 gap-2">
+           {SUPPORTED_LANGUAGES.map((lang) => (
+             <button
+               key={lang.code}
+               onClick={() => setCurrentLanguage(lang.code)}
+               className={`
+                 w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all duration-300
+                 ${currentLanguage === lang.code 
+                    ? 'bg-white/10 border border-cyber-accent/50 scale-110 shadow-[0_0_15px_rgba(0,243,255,0.3)]' 
+                    : 'bg-transparent opacity-50 hover:opacity-100 hover:bg-white/5'}
+               `}
+               title={lang.name}
+             >
+               {lang.flag}
+             </button>
+           ))}
+        </div>
+
         {/* Glass Card */}
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
           
@@ -94,7 +120,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
 
           <h2 className="text-2xl font-medium text-white mb-8 text-center tracking-tight">
-            {isLogin ? 'Welcome Back' : 'Initialize'}
+            {isLogin ? t.welcome : t.init}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -102,32 +128,32 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             {!isLogin && (
                <GlassInput 
                  icon={UserIcon}
-                 label="DISPLAY NAME"
+                 label={t.displayName}
                  type="text"
                  value={displayName}
                  onChange={(e: any) => setDisplayName(e.target.value)}
-                 placeholder="Call sign..."
+                 placeholder={t.placeholderName}
                  required
                />
             )}
 
             <GlassInput 
               icon={UserIcon}
-              label="USERNAME"
+              label={t.username}
               type="text"
               value={username}
               onChange={(e: any) => setUsername(e.target.value)}
-              placeholder="Identity ID..."
+              placeholder={t.placeholderUser}
               required
             />
 
             <GlassInput 
               icon={Lock}
-              label="PASSWORD"
+              label={t.password}
               type="password"
               value={password}
               onChange={(e: any) => setPassword(e.target.value)}
-              placeholder="Access key..."
+              placeholder={t.placeholderPass}
               required
             />
 
@@ -149,7 +175,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 `}
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  {loading ? 'PROCESSING...' : <>{isLogin ? 'ACCESS SYSTEM' : 'CREATE IDENTITY'} <ArrowRight size={18} /></>}
+                  {loading ? t.processing : <>{isLogin ? t.loginBtn : t.registerBtn} <ArrowRight size={18} /></>}
                 </span>
               </button>
 
@@ -172,7 +198,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               >
                  <div className="absolute inset-0 bg-cyber-accent/20 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500"></div>
                  <Sparkles size={16} className={`${loading ? '' : 'animate-pulse'}`} />
-                 <span className="relative z-10">ACTIVATE DEMO MODE</span>
+                 <span className="relative z-10">{t.guestBtn}</span>
               </button>
             </div>
           </form>
@@ -182,7 +208,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               onClick={() => { setIsLogin(!isLogin); setError(null); }}
               className="text-xs text-gray-500 hover:text-white transition-colors tracking-wide hover:tracking-wider duration-300 border-b border-transparent hover:border-gray-500 pb-0.5"
             >
-              {isLogin ? "Initialize new identity" : "Access existing account"}
+              {isLogin ? t.switchRegister : t.switchLogin}
             </button>
           </div>
         </div>

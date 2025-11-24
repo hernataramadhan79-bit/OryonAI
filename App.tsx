@@ -2,18 +2,27 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GenerateContentResponse, Content, Part } from "@google/genai";
 import { Sparkles, Trash2, AlertCircle, Database, LogOut, User as UserIcon, Menu } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, User, Agent } from './types';
+import { Message, User, Agent, LanguageCode } from './types';
 import { sendMessageStream, resetChat, generateImage, initializeChat, analyzeInputIntent, AGENTS } from './services/geminiService';
 import { getSessionUser, logoutUser } from './services/authService';
 import ChatMessage from './components/ChatMessage';
 import InputArea from './components/InputArea';
 import LoginScreen from './components/LoginScreen';
 import Sidebar from './components/Sidebar';
+import { getTranslation, getSystemLanguageInstruction, SUPPORTED_LANGUAGES } from './utils/translations';
 
 const App: React.FC = () => {
   // Initialize state directly from storage to avoid flash of login screen
   const [currentUser, setCurrentUser] = useState<User | null>(() => getSessionUser());
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en');
   
+  // Sync language with user profile on load
+  useEffect(() => {
+    if (currentUser && currentUser.language) {
+      setCurrentLanguage(currentUser.language);
+    }
+  }, [currentUser]);
+
   // State for the CURRENT active conversation
   const [messages, setMessages] = useState<Message[]>([]);
   
@@ -35,6 +44,14 @@ const App: React.FC = () => {
 
   // Responsive Sidebar Logic
   const isSidebarOpen = isSidebarPinned || isSidebarHovered;
+  
+  // Translations
+  const t = getTranslation(currentLanguage);
+
+  // Helper to combine agent instruction with language instruction
+  const getFullSystemInstruction = (agentInstruction: string, lang: LanguageCode) => {
+    return agentInstruction + getSystemLanguageInstruction(lang);
+  };
 
   // Load Memory (Multi-Agent)
   useEffect(() => {
@@ -51,7 +68,7 @@ const App: React.FC = () => {
         const agentMessages = parsedStore[currentAgent.id] || [];
         setMessages(agentMessages);
         
-        initializeGeminiWithHistory(agentMessages, currentAgent.systemInstruction);
+        initializeGeminiWithHistory(agentMessages, getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage));
         
         if (agentMessages.length === 0) {
            setInitialWelcome(currentUser.displayName, currentAgent);
@@ -66,6 +83,14 @@ const App: React.FC = () => {
     }
     setIsMemoryLoaded(true);
   }, [currentUser]); 
+
+  // Update system instruction when language changes
+  useEffect(() => {
+    if (isMemoryLoaded && messages.length > 0) {
+      // Re-initialize chat with new language instruction but keep history
+      initializeGeminiWithHistory(messages, getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage));
+    }
+  }, [currentLanguage]);
 
   // Helper to re-init Gemini context
   const initializeGeminiWithHistory = (msgs: Message[], instruction: string) => {
@@ -128,22 +153,27 @@ const App: React.FC = () => {
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
     
-    // Select voice (Prefer Google US English or generic English)
+    // Select voice based on language code
     const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(v => v.name.includes('Google US English')) || voices.find(v => v.lang.startsWith('en'));
-    if (preferredVoice) utterance.voice = preferredVoice;
+    const langDef = SUPPORTED_LANGUAGES.find(l => l.code === currentLanguage);
+    const targetVoiceCode = langDef?.voiceCode || 'en-US';
+
+    // Try to find exact match first (e.g. id-ID), then language match (e.g. id), then fallback to Google US
+    const preferredVoice = 
+      voices.find(v => v.lang === targetVoiceCode) || 
+      voices.find(v => v.lang.startsWith(currentLanguage)) || 
+      voices.find(v => v.name.includes('Google US English'));
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+      utterance.lang = preferredVoice.lang;
+    }
 
     window.speechSynthesis.speak(utterance);
   };
 
   const setInitialWelcome = (name: string, agent: Agent) => {
-    let welcomeText = "";
-    switch(agent.id) {
-        case 'devcore': welcomeText = `DevCore System Online. Ready for code analysis. Target?`; break;
-        case 'velocis': welcomeText = `Velocis Engine ignited. Ready to visualize or narrate your imagination.`; break;
-        case 'strategos': welcomeText = `Strategos Module Active. Awaiting business data for analysis.`; break;
-        default: welcomeText = `Hello ${name}, welcome back! OryonAI systems online. What is our objective today?`;
-    }
+    const welcomeText = `Hello ${name}, ${agent.name} ${t.aiWelcome}`;
 
     const welcomeMsg: Message = {
       id: 'welcome-' + uuidv4(),
@@ -155,7 +185,7 @@ const App: React.FC = () => {
     };
     
     setMessages([welcomeMsg]);
-    initializeChat([], agent.systemInstruction);
+    initializeChat([], getFullSystemInstruction(agent.systemInstruction, currentLanguage));
     
     // Optionally speak welcome message if enabled (default off though)
     if (isSpeechEnabled) speakText(welcomeText);
@@ -201,7 +231,7 @@ const App: React.FC = () => {
     setCurrentAgent(newAgent);
     setMessages(nextMessages);
     
-    initializeGeminiWithHistory(nextMessages, newAgent.systemInstruction);
+    initializeGeminiWithHistory(nextMessages, getFullSystemInstruction(newAgent.systemInstruction, currentLanguage));
 
     if (nextMessages.length === 0) {
         setInitialWelcome(currentUser?.displayName || 'User', newAgent);
@@ -251,7 +281,12 @@ const App: React.FC = () => {
        }
     });
 
-    const stream = await sendMessageStream(text, historyContext, currentAgent.systemInstruction, attachment);
+    const stream = await sendMessageStream(
+      text, 
+      historyContext, 
+      getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage), 
+      attachment
+    );
     
     let accumulatedText = '';
 
@@ -309,7 +344,7 @@ const App: React.FC = () => {
             const loadingMsg: Message = {
               id: aiMessageId,
               role: 'model',
-              text: "Processing visual request...",
+              text: t.visualProcessing,
               timestamp: Date.now(),
               isStreaming: true,
               type: 'text'
@@ -317,7 +352,7 @@ const App: React.FC = () => {
             setMessages((prev) => [...prev, loadingMsg]);
 
             const base64Image = await generateImage(text, attachment);
-            const successText = "Art generated successfully.";
+            const successText = t.visualSuccess;
 
             setMessages((prev) => 
               prev.map((msg) => 
@@ -342,7 +377,7 @@ const App: React.FC = () => {
 
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "System Malfunction. Retry initiated.");
+      setError(err.message || t.errorGeneric);
       setMessages((prev) => prev.filter(m => m.isStreaming !== true)); 
     } finally {
       setIsLoading(false);
@@ -363,7 +398,7 @@ const App: React.FC = () => {
     const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
     localStorage.setItem(userStorageKey, JSON.stringify(updatedStore));
 
-    const clearMsg = "Module memory cache cleared. Starting new session.";
+    const clearMsg = t.aiClear;
     setMessages([{
       id: uuidv4(),
       role: 'model',
@@ -393,6 +428,8 @@ const App: React.FC = () => {
         agents={AGENTS}
         currentAgent={currentAgent}
         onSelectAgent={handleAgentChange}
+        currentLanguage={currentLanguage}
+        onLanguageChange={setCurrentLanguage}
       />
 
       {/* Overlay backdrop for mobile when sidebar is open */}
@@ -449,7 +486,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 text-[10px] font-mono px-3 py-1.5 rounded-full border backdrop-blur-md transition-all duration-500 text-cyber-accent bg-cyber-accent/5 border-cyber-accent/20 shadow-[0_0_15px_rgba(0,243,255,0.1)]">
               <Database size={12} />
-              <span>MEM-LINK: {currentUser.username.toUpperCase()}</span>
+              <span>{t.memLink}: {currentUser.username.toUpperCase()}</span>
             </div>
             
             <div className="flex items-center gap-3">
@@ -464,10 +501,10 @@ const App: React.FC = () => {
                
                {/* Action Buttons */}
                <div className="flex gap-2">
-                  <button onClick={handleClearChat} className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 text-gray-400 transition-all duration-300 active:scale-90" title="Clear current session">
+                  <button onClick={handleClearChat} className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5 hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 text-gray-400 transition-all duration-300 active:scale-90" title={t.clearChat}>
                      <Trash2 size={16} />
                   </button>
-                  <button onClick={handleLogout} className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5 hover:bg-white/10 hover:text-white text-gray-400 transition-all duration-300 active:scale-90" title="Logout">
+                  <button onClick={handleLogout} className="w-9 h-9 rounded-full flex items-center justify-center bg-white/5 border border-white/5 hover:bg-white/10 hover:text-white text-gray-400 transition-all duration-300 active:scale-90" title={t.logout}>
                      <LogOut size={16} />
                   </button>
                </div>
@@ -502,6 +539,7 @@ const App: React.FC = () => {
           isSidebarOpen={isSidebarOpen}
           isSpeechEnabled={isSpeechEnabled}
           onToggleSpeech={() => setIsSpeechEnabled(!isSpeechEnabled)}
+          currentLanguage={currentLanguage}
         />
       </div>
       

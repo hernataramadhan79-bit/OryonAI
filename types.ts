@@ -22,6 +22,7 @@ export interface User {
   username: string;
   displayName: string;
   avatarInitials: string;
+  language?: LanguageCode;
 }
 
 export interface Agent {
@@ -32,4 +33,13 @@ export interface Agent {
   systemInstruction: string;
   themeColor: string;
   iconId: 'cpu' | 'terminal' | 'feather' | 'briefcase' | 'image';
+}
+
+export type LanguageCode = 'en' | 'id' | 'ja' | 'es' | 'fr' | 'de';
+
+export interface LanguageDefinition {
+  code: LanguageCode;
+  name: string;
+  flag: string;
+  voiceCode: string; // For Speech Recognition (e.g., 'en-US', 'id-ID')
 }

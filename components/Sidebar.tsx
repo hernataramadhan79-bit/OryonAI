@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
-import { X, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon, Pin, PinOff } from 'lucide-react';
-import { Agent } from '../types';
+import { X, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon, Pin, PinOff, Globe } from 'lucide-react';
+import { Agent, LanguageCode } from '../types';
+import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 
 interface SidebarProps {
   isOpen: boolean; 
@@ -11,6 +12,8 @@ interface SidebarProps {
   agents: Agent[];
   currentAgent: Agent;
   onSelectAgent: (agent: Agent) => void;
+  currentLanguage: LanguageCode;
+  onLanguageChange: (lang: LanguageCode) => void;
 }
 
 const getIcon = (iconId: string) => {
@@ -83,8 +86,12 @@ const Sidebar: React.FC<SidebarProps> = ({
   onHoverEnd,
   agents, 
   currentAgent, 
-  onSelectAgent 
+  onSelectAgent,
+  currentLanguage,
+  onLanguageChange
 }) => {
+  const t = getTranslation(currentLanguage);
+
   return (
     <div 
       onMouseEnter={onHoverStart}
@@ -119,9 +126,34 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
+      {/* Language Selector (Compact) */}
+      <div className="px-6 py-4 border-b border-white/5">
+        <div className="flex items-center gap-2 mb-2 text-gray-500 text-[10px] font-mono uppercase tracking-widest">
+           <Globe size={10} />
+           <span>Language Interface</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+           {SUPPORTED_LANGUAGES.map((lang) => (
+             <button
+               key={lang.code}
+               onClick={() => onLanguageChange(lang.code)}
+               className={`
+                 px-2 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all
+                 ${currentLanguage === lang.code 
+                   ? 'bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30' 
+                   : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10 hover:text-white'}
+               `}
+             >
+               <span>{lang.flag}</span>
+               <span>{lang.code.toUpperCase()}</span>
+             </button>
+           ))}
+        </div>
+      </div>
+
       {/* Agent List */}
-      <div className="p-6 space-y-4 overflow-y-auto h-[calc(100%-90px)] custom-scrollbar">
-        <p className="text-[10px] font-mono text-gray-500 mb-4 uppercase tracking-widest pl-2 opacity-70">Select Neural Model</p>
+      <div className="p-6 space-y-4 overflow-y-auto h-[calc(100%-180px)] custom-scrollbar">
+        <p className="text-[10px] font-mono text-gray-500 mb-4 uppercase tracking-widest pl-2 opacity-70">{t.selectModel}</p>
         
         <div className="space-y-3">
           {agents.map((agent) => (
@@ -137,7 +169,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="mt-10 p-6 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group">
            <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
            <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
-             SYSTEM STATUS: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">ONLINE</span>
+             {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>
            </p>
         </div>
       </div>
