@@ -216,11 +216,11 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
           )}
 
-          {/* Input Container - IMPROVED SPACING */}
+          {/* Input Container - IMPROVED SPACING FOR MOBILE */}
           <div 
             className={`
               relative flex items-end gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-[24px] md:rounded-[26px] backdrop-blur-2xl border transition-all duration-500
-              mx-1 md:mx-0
+              mx-0 md:mx-0
               ${isFocused || isListening
                 ? 'bg-white/10 border-white/20' 
                 : 'bg-white/5 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'}

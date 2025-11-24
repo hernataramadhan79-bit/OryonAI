@@ -504,6 +504,18 @@ const App: React.FC = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-3 md:gap-4">
+            
+            {/* Clear Chat Button (Moved from floating) */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleClearChat}
+                className="p-2 rounded-lg bg-white/5 text-gray-400 border border-white/10 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all active:scale-95"
+                title={t.clearChat}
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+
             <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-gray-400">
                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                <span className="tracking-widest">{currentUser.username.toUpperCase()}</span>
@@ -553,18 +565,7 @@ const App: React.FC = () => {
             </div>
         </main>
 
-        {/* Floating Controls (Clear Chat) */}
-        {messages.length > 0 && (
-          <div className={`fixed z-10 transition-all duration-300 ${isSidebarPinned ? 'bottom-20 md:bottom-24 right-4 md:right-8' : 'bottom-20 md:bottom-24 right-4 md:right-8'}`}>
-             <button
-               onClick={handleClearChat}
-               className="p-3 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all shadow-lg backdrop-blur-sm group"
-               title={t.clearChat}
-             >
-                <Trash2 size={18} className="group-hover:rotate-12 transition-transform" />
-             </button>
-          </div>
-        )}
+        {/* Floating Controls Removed - Now in Header */}
 
         {/* Input Area */}
         <InputArea 
