@@ -237,22 +237,30 @@ export const sendMessageStream = async (
 
 export const analyzeInputIntent = async (text: string): Promise<'DRAW' | 'CHAT'> => {
   try {
+    // Enhanced prompt to catch multilingual requests (e.g., "Buatkan gambar", "Gambarin")
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Analyze this user input: "${text}".
       Determine if the user is explicitly asking to GENERATE, DRAW, CREATE, or VISUALIZE an image/picture/art/logo.
+      Consider inputs in any language (English, Indonesian, Spanish, etc.).
       
-      Examples:
-      "Draw a cat" -> DRAW
-      "Make me a logo" -> DRAW
-      "Generate a landscape" -> DRAW
-      "Visualize a futuristic city" -> DRAW
-      "Create an image of a dragon" -> DRAW
-      "Hello" -> CHAT
-      "Write a poem" -> CHAT
-      "How are you?" -> CHAT
-      "Change this image to cartoon style" -> DRAW
-      "Edit this photo" -> DRAW
+      Examples of DRAW Intent:
+      "Draw a cat"
+      "Make me a logo"
+      "Generate a landscape"
+      "Visualize a futuristic city"
+      "Create an image of a dragon"
+      "Change this image to cartoon style"
+      "Buatkan gambar kucing" (Indonesian)
+      "Gambarin pemandangan" (Indonesian)
+      "Ciptakan ilustrasi" (Indonesian)
+      
+      Examples of CHAT Intent:
+      "Hello"
+      "Write a poem"
+      "How are you?"
+      "Apa kabar?"
+      "Jelaskan tentang AI"
       
       Respond ONLY with "DRAW" or "CHAT".`,
     });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GenerateContentResponse, Content, Part } from "@google/genai";
-import { Sparkles, Trash2, AlertCircle, Database, LogOut, User as UserIcon, Menu } from 'lucide-react';
+import { Trash2, AlertCircle, Database, LogOut, User as UserIcon, Menu, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, User, Agent, LanguageCode } from './types';
 import { sendMessageStream, resetChat, generateImage, initializeChat, analyzeInputIntent, AGENTS } from './services/geminiService';
@@ -19,6 +19,7 @@ const App: React.FC = () => {
   // Sync language with user profile on load
   useEffect(() => {
     if (currentUser && currentUser.language) {
+      setCurrentUser(prev => prev ? ({...prev, language: currentUser.language}) : null);
       setCurrentLanguage(currentUser.language);
     }
   }, [currentUser]);
@@ -201,6 +202,9 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
+    if (user.language) {
+      setCurrentLanguage(user.language);
+    }
   };
 
   const handleLogout = () => {
@@ -336,39 +340,39 @@ const App: React.FC = () => {
       const aiMessageId = uuidv4();
       let handled = false;
 
-      if (currentAgent.id === 'velocis') {
-         const intent = await analyzeInputIntent(text);
+      // REMOVED RESTRICTION: Now checks intent for ALL agents
+      // Previously: if (currentAgent.id === 'velocis') { ... }
+      const intent = await analyzeInputIntent(text);
 
-         if (intent === 'DRAW') {
-            handled = true;
-            const loadingMsg: Message = {
-              id: aiMessageId,
-              role: 'model',
-              text: t.visualProcessing,
-              timestamp: Date.now(),
-              isStreaming: true,
-              type: 'text'
-            };
-            setMessages((prev) => [...prev, loadingMsg]);
+      if (intent === 'DRAW') {
+        handled = true;
+        const loadingMsg: Message = {
+          id: aiMessageId,
+          role: 'model',
+          text: t.visualProcessing,
+          timestamp: Date.now(),
+          isStreaming: true,
+          type: 'text'
+        };
+        setMessages((prev) => [...prev, loadingMsg]);
 
-            const base64Image = await generateImage(text, attachment);
-            const successText = t.visualSuccess;
+        const base64Image = await generateImage(text, attachment);
+        const successText = t.visualSuccess;
 
-            setMessages((prev) => 
-              prev.map((msg) => 
-                msg.id === aiMessageId 
-                  ? { 
-                      ...msg, 
-                      text: successText, 
-                      imageUrl: base64Image,
-                      type: 'image',
-                      isStreaming: false 
-                    } 
-                  : msg
-              )
-            );
-            speakText(successText);
-         }
+        setMessages((prev) => 
+          prev.map((msg) => 
+            msg.id === aiMessageId 
+              ? { 
+                  ...msg, 
+                  text: successText, 
+                  imageUrl: base64Image,
+                  type: 'image',
+                  isStreaming: false 
+                } 
+              : msg
+          )
+        );
+        speakText(successText);
       }
 
       if (!handled) {
@@ -408,6 +412,18 @@ const App: React.FC = () => {
     }]);
     if (isSpeechEnabled) speakText(clearMsg);
     setError(null);
+  };
+
+  // Helper for dynamic header icon
+  const getHeaderIcon = (iconId: string) => {
+    const className = `w-6 h-6 relative z-10 transition-colors duration-500 ${currentAgent.themeColor}`;
+    switch (iconId) {
+      case 'terminal': return <Terminal className={className} />;
+      case 'feather': return <Feather className={className} />;
+      case 'briefcase': return <Briefcase className={className} />;
+      case 'image': return <ImageIcon className={className} />;
+      default: return <Cpu className={className} />;
+    }
   };
 
   if (!currentUser) {
@@ -469,7 +485,7 @@ const App: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="relative group">
                 <div className={`absolute inset-0 blur-xl opacity-60 animate-pulse-slow ${currentAgent.themeColor.replace('text-', 'bg-')}`}></div>
-                <Sparkles className={`w-6 h-6 relative z-10 transition-colors duration-500 ${currentAgent.themeColor}`} />
+                {getHeaderIcon(currentAgent.iconId)}
               </div>
               <div className="flex flex-col">
                  <h1 className="text-lg font-mono font-bold tracking-widest text-white leading-none drop-shadow-md">
