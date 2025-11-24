@@ -6,7 +6,7 @@ import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 interface InputAreaProps {
   onSend: (text: string, attachment?: { data: string; mimeType: string }) => void;
   isLoading: boolean;
-  isSidebarOpen: boolean;
+  isSidebarPinned: boolean;
   isSpeechEnabled: boolean;
   onToggleSpeech: () => void;
   currentLanguage: LanguageCode;
@@ -15,7 +15,7 @@ interface InputAreaProps {
 const InputArea: React.FC<InputAreaProps> = ({ 
   onSend, 
   isLoading, 
-  isSidebarOpen,
+  isSidebarPinned,
   isSpeechEnabled,
   onToggleSpeech,
   currentLanguage
@@ -130,7 +130,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   return (
     <div 
       className={`fixed bottom-0 right-0 z-20 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
-        w-full ${isSidebarOpen ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
+        w-full ${isSidebarPinned ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
       `}
     >
       {/* Gradient Fade for seamless scroll feel */}

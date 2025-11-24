@@ -44,6 +44,7 @@ const App: React.FC = () => {
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
 
   // Responsive Sidebar Logic
+  // isOpen: Controls Visibility (Slide in/out) -> Includes Hover
   const isSidebarOpen = isSidebarPinned || isSidebarHovered;
   
   // Translations
@@ -128,6 +129,11 @@ const App: React.FC = () => {
   // Save Memory (Update Store when Messages Change)
   useEffect(() => {
     if (currentUser && isMemoryLoaded) {
+       // PERFORMANCE FIX: Don't write to localStorage while streaming (high frequency updates)
+       // Wait until the message is finished (isStreaming = false)
+       const lastMsg = messages[messages.length - 1];
+       if (lastMsg && lastMsg.isStreaming) return;
+
        const updatedStore = {
          ...historyStore,
          [currentAgent.id]: messages
@@ -340,8 +346,6 @@ const App: React.FC = () => {
       const aiMessageId = uuidv4();
       let handled = false;
 
-      // REMOVED RESTRICTION: Now checks intent for ALL agents
-      // Previously: if (currentAgent.id === 'velocis') { ... }
       const intent = await analyzeInputIntent(text);
 
       if (intent === 'DRAW') {
@@ -457,14 +461,14 @@ const App: React.FC = () => {
       {/* Main Content Wrapper */}
       <div 
         className={`flex-grow flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] relative
-          ${isSidebarOpen ? 'md:pl-80' : 'pl-0'} 
+          ${isSidebarPinned ? 'md:pl-80' : 'pl-0'} 
         `}
       >
         {/* Header */}
         <header className={`
           fixed top-0 right-0 z-20 backdrop-blur-xl border-b h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
           bg-cyber-black/60 border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]
-          w-full ${isSidebarOpen ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
+          w-full ${isSidebarPinned ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
         `}>
           
           <div className="flex items-center gap-4 md:gap-6">
@@ -552,7 +556,7 @@ const App: React.FC = () => {
         <InputArea 
           onSend={handleSendMessage} 
           isLoading={isLoading} 
-          isSidebarOpen={isSidebarOpen}
+          isSidebarPinned={isSidebarPinned}
           isSpeechEnabled={isSpeechEnabled}
           onToggleSpeech={() => setIsSpeechEnabled(!isSpeechEnabled)}
           currentLanguage={currentLanguage}
