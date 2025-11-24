@@ -123,8 +123,8 @@ const App: React.FC = () => {
     switch(agent.id) {
         case 'devcore': welcomeText = `DevCore System Online. Ready for code analysis. Target?`; break;
         case 'velocis': welcomeText = `Velocis Engine ignited. Ready to visualize or narrate your imagination.`; break;
-        case 'strategos': welcomeText = `Strategos Module Active. awaiting business data for analysis.`; break;
-        default: welcomeText = `Halo ${name}, selamat datang kembali! Sistem OryonAI siap. Ada proyek apa hari ini?`;
+        case 'strategos': welcomeText = `Strategos Module Active. Awaiting business data for analysis.`; break;
+        default: welcomeText = `Hello ${name}, welcome back! OryonAI systems online. What is our objective today?`;
     }
 
     const welcomeMsg: Message = {
@@ -341,7 +341,7 @@ const App: React.FC = () => {
     setMessages([{
       id: uuidv4(),
       role: 'model',
-      text: "Cache memori modul ini dibersihkan. Memulai sesi baru.",
+      text: "Module memory cache cleared. Starting new session.",
       timestamp: Date.now(),
       type: 'text'
     }]);
