@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Chat, GenerateContentResponse, Content, Part } from "@google/genai";
 import { Agent } from "../types";
 
@@ -176,14 +177,11 @@ export const sendMessageStream = async (
       parts.push({ text: '' });
     }
 
-    // Optimization: If only text, pass string. If mixed/attachment, pass parts.
-    // This helps avoid some edge-case payload issues with the SDK.
-    const messagePayload = (parts.length === 1 && parts[0].text !== undefined) 
-      ? parts[0].text 
-      : parts;
-
+    // CRITICAL: When using attachments in Chat mode with certain SDK versions,
+    // passing the array of parts directly is often the most robust method.
+    // The message parameter supports Array<string | Part>.
     return await chatSession.sendMessageStream({
-      message: messagePayload
+      message: parts
     });
 
   } catch (error) {
@@ -215,13 +213,9 @@ export const sendMessageStream = async (
        }
        if (parts.length === 0) parts.push({ text: '' });
        
-       const messagePayload = (parts.length === 1 && parts[0].text !== undefined) 
-        ? parts[0].text 
-        : parts;
-
        // 4. Retry Send
        return await chatSession.sendMessageStream({
-         message: messagePayload
+         message: parts
        });
 
     } catch (retryError: any) {
@@ -236,6 +230,8 @@ export const sendMessageStream = async (
 };
 
 export const analyzeInputIntent = async (text: string): Promise<'DRAW' | 'CHAT'> => {
+  if (!text || !text.trim()) return 'CHAT';
+  
   try {
     // Enhanced prompt to catch multilingual requests (e.g., "Buatkan gambar", "Gambarin")
     const response = await ai.models.generateContent({

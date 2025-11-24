@@ -107,17 +107,43 @@ const InputArea: React.FC<InputAreaProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Safety check for file size (e.g. 10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File too large. Maximum size is 10MB.");
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        const base64Data = base64String.split(',')[1];
-        
-        setAttachment({
-          data: base64Data,
-          mimeType: file.type,
-          preview: base64String
-        });
+      
+      reader.onload = (event) => {
+        try {
+          const result = event.target?.result;
+          if (typeof result === 'string') {
+            // Robustly extract base64 data
+            const parts = result.split(',');
+            if (parts.length >= 2) {
+              const base64Data = parts[1];
+              setAttachment({
+                data: base64Data,
+                mimeType: file.type,
+                preview: result
+              });
+            } else {
+              throw new Error("Invalid file format");
+            }
+          }
+        } catch (err) {
+          console.error("Error processing file:", err);
+          alert("Failed to process image. Please try another file.");
+        }
       };
+
+      reader.onerror = () => {
+        console.error("Error reading file");
+        alert("Error reading file.");
+      };
+
       reader.readAsDataURL(file);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
