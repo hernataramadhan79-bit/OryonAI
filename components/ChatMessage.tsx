@@ -93,7 +93,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
 
   return (
     <div 
-      className={`flex w-full mb-6 md:mb-8 opacity-0 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
+      className={`flex w-full mb-8 md:mb-10 opacity-0 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
       style={containerStyle}
     >
       
@@ -108,7 +108,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
         `}</style>
       )}
 
-      <div className={`flex max-w-[95%] md:max-w-[85%] gap-3 md:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`flex max-w-full md:max-w-[85%] gap-2 md:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
         
         {/* Avatar - Glassy */}
         <div className={`
@@ -129,10 +129,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
           <div 
             style={isStreaming && !isUser ? { animation: `${pulseAnimationName} 2s infinite ease-in-out` } : {}}
             className={`
-            group relative px-5 py-4 text-[14px] md:text-[15px] leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full backdrop-blur-xl shadow-sm
+            group relative px-4 md:px-5 py-3 md:py-4 text-[14px] md:text-[15px] leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] max-w-full backdrop-blur-xl shadow-sm
             ${isUser 
-              ? 'bg-white/10 text-gray-100 rounded-[1.5rem] rounded-tr-sm border border-white/10 w-fit' 
-              : `bg-black/40 text-gray-200 rounded-[1.5rem] rounded-tl-sm border border-white/5 border-l-2 ${borderColor} w-full`} 
+              ? 'bg-white/10 text-gray-100 rounded-[1.25rem] md:rounded-[1.5rem] rounded-tr-sm border border-white/10 w-fit' 
+              : `bg-black/40 text-gray-200 rounded-[1.25rem] md:rounded-[1.5rem] rounded-tl-sm border border-white/5 border-l-2 ${borderColor} w-full`} 
             ${isImage ? 'p-0 bg-transparent border-none shadow-none w-fit !backdrop-blur-0' : ''}
           `}>
             

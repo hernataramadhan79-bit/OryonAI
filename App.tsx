@@ -317,8 +317,8 @@ const App: React.FC = () => {
     setMessages((prev) => 
       prev.map((msg) => 
         msg.id === aiMessageId 
-          ? { ...msg, isStreaming: false } 
-          : msg
+              ? { ...msg, isStreaming: false } 
+              : msg
       )
     );
 
@@ -471,7 +471,7 @@ const App: React.FC = () => {
           w-full ${isSidebarPinned ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
         `}>
           
-          <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             {/* Menu Button */}
             <button 
               onClick={() => setIsSidebarPinned(!isSidebarPinned)}
@@ -492,10 +492,10 @@ const App: React.FC = () => {
                 {getHeaderIcon(currentAgent.iconId)}
               </div>
               <div className="flex flex-col">
-                 <h1 className="text-lg font-mono font-bold tracking-widest text-white leading-none drop-shadow-md">
+                 <h1 className="text-base md:text-lg font-mono font-bold tracking-widest text-white leading-none drop-shadow-md">
                    {currentAgent.name.toUpperCase()}
                  </h1>
-                 <span className={`text-[10px] font-mono tracking-[0.3em] transition-colors duration-500 ${currentAgent.themeColor}`}>
+                 <span className={`text-[9px] md:text-[10px] font-mono tracking-[0.3em] transition-colors duration-500 ${currentAgent.themeColor}`}>
                    {currentAgent.role.toUpperCase()}
                  </span>
               </div>
@@ -503,7 +503,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
             <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-gray-400">
                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                <span className="tracking-widest">{currentUser.username.toUpperCase()}</span>
@@ -523,8 +523,8 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {/* Chat Area */}
-        <main className="flex-grow overflow-y-auto overflow-x-hidden p-4 md:p-8 pt-24 pb-32 custom-scrollbar flex flex-col items-center">
+        {/* Chat Area - Adjusted padding for mobile */}
+        <main className="flex-grow overflow-y-auto overflow-x-hidden px-3 md:px-8 pt-24 pb-48 md:pb-32 custom-scrollbar flex flex-col items-center">
             <div className="w-full max-w-3xl">
                {messages.map((msg) => (
                  <ChatMessage 
@@ -555,7 +555,7 @@ const App: React.FC = () => {
 
         {/* Floating Controls (Clear Chat) */}
         {messages.length > 0 && (
-          <div className={`fixed z-10 transition-all duration-300 ${isSidebarPinned ? 'bottom-24 right-8' : 'bottom-24 right-4 md:right-8'}`}>
+          <div className={`fixed z-10 transition-all duration-300 ${isSidebarPinned ? 'bottom-20 md:bottom-24 right-4 md:right-8' : 'bottom-20 md:bottom-24 right-4 md:right-8'}`}>
              <button
                onClick={handleClearChat}
                className="p-3 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all shadow-lg backdrop-blur-sm group"

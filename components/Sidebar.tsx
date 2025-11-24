@@ -36,7 +36,7 @@ const AgentItem: React.FC<AgentItemProps> = memo(({ agent, isActive, onClick }) 
   <button
     onClick={onClick}
     className={`
-      w-full text-left relative group p-4 rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] overflow-hidden
+      w-full text-left relative group p-3 md:p-4 rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] overflow-hidden
       border transform-gpu
       ${isActive 
         ? `bg-white/10 border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-md translate-x-2` 
@@ -47,9 +47,9 @@ const AgentItem: React.FC<AgentItemProps> = memo(({ agent, isActive, onClick }) 
     <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-1000 ease-in-out transform translate-x-[-100%] group-hover:translate-x-[100%] pointer-events-none`}></div>
     <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50"></div>
 
-    <div className="relative z-10 flex items-start gap-4">
+    <div className="relative z-10 flex items-start gap-3 md:gap-4">
       <div className={`
-        p-3 rounded-xl flex items-center justify-center transition-all duration-500
+        p-2.5 md:p-3 rounded-xl flex items-center justify-center transition-all duration-500
         shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]
         ${isActive 
           ? `bg-gradient-to-br from-white/10 to-white/5 ${agent.themeColor} shadow-[0_0_15px_rgba(var(--color),0.3)]` 
@@ -58,19 +58,19 @@ const AgentItem: React.FC<AgentItemProps> = memo(({ agent, isActive, onClick }) 
         {getIcon(agent.iconId)}
       </div>
 
-      <div className="flex-grow">
-        <div className="flex justify-between items-center mb-1">
-          <h3 className={`font-bold text-sm tracking-wide transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+      <div className="flex-grow min-w-0">
+        <div className="flex justify-between items-center mb-0.5 md:mb-1">
+          <h3 className={`font-bold text-sm tracking-wide transition-colors duration-300 truncate pr-2 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
             {agent.name}
           </h3>
           {isActive && (
-            <div className={`relative w-2 h-2`}>
+            <div className={`relative w-2 h-2 flex-shrink-0`}>
                <div className={`absolute inset-0 rounded-full ${agent.themeColor.replace('text-', 'bg-')} animate-ping opacity-75`}></div>
                <div className={`relative rounded-full w-2 h-2 ${agent.themeColor.replace('text-', 'bg-')}`}></div>
             </div>
           )}
         </div>
-        <p className={`text-xs font-medium mb-1 transition-colors duration-300 ${isActive ? 'text-gray-300' : 'text-gray-600 group-hover:text-gray-400'}`}>
+        <p className={`text-xs font-medium mb-1 transition-colors duration-300 truncate ${isActive ? 'text-gray-300' : 'text-gray-600 group-hover:text-gray-400'}`}>
           {agent.role}
         </p>
       </div>
@@ -97,7 +97,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       onMouseEnter={onHoverStart}
       onMouseLeave={onHoverEnd}
       className={`
-        fixed top-0 left-0 h-full w-80 z-50 
+        fixed top-0 left-0 h-full z-50 
+        w-[85vw] max-w-[320px] md:w-80
         bg-cyber-black/95 backdrop-blur-2xl border-r border-white/5
         shadow-[20px_0_50px_rgba(0,0,0,0.3)] 
         transform-gpu transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
@@ -106,10 +107,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       style={{ willChange: 'transform' }}
     >
       {/* Header */}
-      <div className="p-8 border-b border-white/5 flex justify-between items-center relative overflow-hidden h-20">
+      <div className="p-6 md:p-8 border-b border-white/5 flex justify-between items-center relative overflow-hidden h-20">
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
         
-        <h2 className="text-xl font-mono font-bold text-white tracking-[0.2em] relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+        <h2 className="text-lg md:text-xl font-mono font-bold text-white tracking-[0.2em] relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
           NEURAL LINK
         </h2>
         
@@ -138,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                key={lang.code}
                onClick={() => onLanguageChange(lang.code)}
                className={`
-                 px-2 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all
+                 px-1 py-1.5 rounded-lg text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-all
                  ${currentLanguage === lang.code 
                    ? 'bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30' 
                    : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10 hover:text-white'}
@@ -152,10 +153,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Agent List */}
-      <div className="p-6 space-y-4 overflow-y-auto h-[calc(100%-180px)] custom-scrollbar">
-        <p className="text-[10px] font-mono text-gray-500 mb-4 uppercase tracking-widest pl-2 opacity-70">{t.selectModel}</p>
+      <div className="p-4 md:p-6 space-y-4 overflow-y-auto h-[calc(100%-180px)] custom-scrollbar">
+        <p className="text-[10px] font-mono text-gray-500 mb-2 md:mb-4 uppercase tracking-widest pl-2 opacity-70">{t.selectModel}</p>
         
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           {agents.map((agent) => (
             <AgentItem 
               key={agent.id} 
@@ -166,7 +167,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
         </div>
         
-        <div className="mt-10 p-6 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group">
+        <div className="mt-8 md:mt-10 p-4 md:p-6 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group">
            <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
            <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
              {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>

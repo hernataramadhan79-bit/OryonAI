@@ -165,13 +165,13 @@ const InputArea: React.FC<InputAreaProps> = ({
       `}
     >
       {/* Gradient Fade for seamless scroll feel - Positioned above the container */}
-      <div className="absolute -top-32 left-0 w-full h-32 bg-gradient-to-t from-cyber-black via-cyber-black/90 to-transparent pointer-events-none"></div>
+      <div className="absolute -top-24 md:-top-32 left-0 w-full h-24 md:h-32 bg-gradient-to-t from-cyber-black via-cyber-black/90 to-transparent pointer-events-none"></div>
 
-      <div className="relative w-full max-w-3xl mx-auto px-4 pb-4 pt-2">
+      <div className="relative w-full max-w-3xl mx-auto px-2 md:px-4 pb-2 md:pb-4 pt-2">
           
           {/* Attachment HUD Preview */}
           {attachment && (
-            <div className="mb-4 animate-fade-in-up origin-bottom">
+            <div className="mb-4 animate-fade-in-up origin-bottom px-2">
               <div className="relative w-full max-w-md mx-auto">
                 <div className="relative rounded-2xl overflow-hidden bg-black/80 backdrop-blur-xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] group">
                   {/* Decorative Elements */}
@@ -190,7 +190,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                   <div className="flex items-center justify-between p-3 border-t border-white/10 bg-white/5">
                      <div className="flex items-center gap-2 px-2" style={{ color: hexColor }}>
                         <ScanLine size={14} className="animate-pulse" />
-                        <span className="text-[9px] font-mono tracking-[0.2em] uppercase">{t.visualReady}</span>
+                        <span className="text-[9px] font-mono tracking-[0.2em] uppercase hidden md:inline">{t.visualReady}</span>
                      </div>
                      <div className="flex gap-2">
                         <button onClick={() => setAttachment(null)} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all active:scale-95">
@@ -216,13 +216,14 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
           )}
 
-          {/* Input Container */}
+          {/* Input Container - IMPROVED SPACING */}
           <div 
             className={`
-              relative flex items-end gap-2 p-1.5 rounded-[26px] backdrop-blur-2xl border transition-all duration-500
+              relative flex items-end gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-[24px] md:rounded-[26px] backdrop-blur-2xl border transition-all duration-500
+              mx-1 md:mx-0
               ${isFocused || isListening
                 ? 'bg-white/10 border-white/20' 
-                : 'bg-white/5 border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]'}
+                : 'bg-white/5 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'}
             `}
             style={isFocused || isListening ? { boxShadow: `0 0 40px ${hexColor}26` } : {}}
           >
@@ -243,28 +244,28 @@ const InputArea: React.FC<InputAreaProps> = ({
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading}
               className={`
-                w-10 h-10 rounded-full flex-shrink-0 transition-all duration-300
+                w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0 transition-all duration-300
                 flex items-center justify-center
                 text-gray-400 hover:text-white hover:bg-white/10 active:scale-95
                 disabled:opacity-50
               `}
               title="Attach image"
             >
-              <Paperclip size={20} />
+              <Paperclip size={18} className="md:w-5 md:h-5" />
             </button>
 
-            {/* TTS Toggle Button */}
+            {/* TTS Toggle Button - Hidden on very small screens if crowded, or kept compact */}
             <button
               onClick={onToggleSpeech}
               className={`
-                w-10 h-10 rounded-full flex-shrink-0 transition-all duration-300
+                w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0 transition-all duration-300
                 flex items-center justify-center active:scale-95
                 ${isSpeechEnabled ? 'hover:bg-white/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}
               `}
               style={isSpeechEnabled ? { color: hexColor } : {}}
               title={isSpeechEnabled ? "Bot Voice: ON" : "Bot Voice: OFF"}
             >
-              {isSpeechEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+              {isSpeechEnabled ? <Volume2 size={18} className="md:w-5 md:h-5" /> : <VolumeX size={18} className="md:w-5 md:h-5" />}
             </button>
 
             {/* Text Input */}
@@ -278,10 +279,10 @@ const InputArea: React.FC<InputAreaProps> = ({
               placeholder={isListening ? t.listening : t.messagePlaceholder}
               disabled={isLoading}
               className={`
-                flex-grow bg-transparent focus:outline-none resize-none font-sans text-[15px] transition-colors duration-300
+                flex-grow bg-transparent focus:outline-none resize-none font-sans text-[14px] md:text-[15px] transition-colors duration-300
                 text-gray-100 placeholder-gray-500
                 custom-scrollbar
-                leading-[20px] py-[10px] min-h-[40px]
+                leading-[20px] py-[8px] md:py-[10px] min-h-[36px] md:min-h-[40px]
               `}
               style={{ caretColor: hexColor }}
               rows={1}
@@ -291,7 +292,7 @@ const InputArea: React.FC<InputAreaProps> = ({
             <button
               onClick={toggleListening}
               className={`
-                w-10 h-10 rounded-full flex-shrink-0 transition-all duration-300
+                w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0 transition-all duration-300
                 flex items-center justify-center active:scale-95
                 ${isListening 
                     ? 'bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
@@ -299,7 +300,7 @@ const InputArea: React.FC<InputAreaProps> = ({
               `}
               title={`Voice Input (${currentLangDef.name})`}
             >
-              {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+              {isListening ? <MicOff size={18} className="md:w-5 md:h-5" /> : <Mic size={18} className="md:w-5 md:h-5" />}
             </button>
 
             {/* Send Button */}
@@ -307,7 +308,7 @@ const InputArea: React.FC<InputAreaProps> = ({
               onClick={() => handleSubmit()}
               disabled={(!input.trim() && !attachment) || isLoading}
               className={`
-                w-10 h-10 rounded-full flex-shrink-0 transition-all duration-500 ease-out overflow-hidden
+                w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0 transition-all duration-500 ease-out overflow-hidden
                 flex items-center justify-center relative group
                 ${(!input.trim() && !attachment) || isLoading 
                   ? 'bg-white/5 text-gray-600 opacity-50 cursor-not-allowed scale-95' 
@@ -316,12 +317,12 @@ const InputArea: React.FC<InputAreaProps> = ({
               style={(!input.trim() && !attachment) || isLoading ? {} : { color: hexColor, boxShadow: `0 0 20px ${hexColor}33` }}
             >
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle, ${hexColor}33 0%, transparent 70%)` }}></div>
-              <SendHorizontal size={20} className={`relative z-10 transition-transform duration-500 ${(!input.trim() && !attachment) || isLoading ? '' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'}`} />
+              <SendHorizontal size={18} className={`md:w-5 md:h-5 relative z-10 transition-transform duration-500 ${(!input.trim() && !attachment) || isLoading ? '' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'}`} />
             </button>
           </div>
           
-          {/* Footer Text */}
-          <div className="text-center mt-3 opacity-60">
+          {/* Footer Text - Hidden on mobile to save vertical space */}
+          <div className="text-center mt-2 md:mt-3 opacity-60 hidden md:block">
              <p className="text-[9px] font-mono tracking-[0.3em] text-gray-600 drop-shadow-sm">
                {t.madeBy}
              </p>
