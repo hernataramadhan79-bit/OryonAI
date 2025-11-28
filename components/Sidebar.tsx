@@ -9,6 +9,7 @@ interface SidebarProps {
   onPinToggle: () => void;
   onHoverStart: () => void;
   onHoverEnd: () => void;
+  onClose: () => void; // Added for explicit mobile close action
   agents: Agent[];
   currentAgent: Agent;
   onSelectAgent: (agent: Agent) => void;
@@ -81,6 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onPinToggle,
   onHoverStart,
   onHoverEnd,
+  onClose,
   agents, 
   currentAgent, 
   onSelectAgent, 
@@ -90,100 +92,113 @@ const Sidebar: React.FC<SidebarProps> = ({
   const t = getTranslation(currentLanguage);
 
   return (
-    <div 
-      onMouseEnter={onHoverStart}
-      onMouseLeave={onHoverEnd}
-      className={`
-        fixed top-0 left-0 h-full z-[60] 
-        w-[85vw] max-w-[320px] md:w-80
-        bg-cyber-black/95 backdrop-blur-2xl border-r border-white/5
-        shadow-[20px_0_50px_rgba(0,0,0,0.3)] 
-        transform-gpu transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        flex flex-col
-      `}
-      style={{ willChange: 'transform' }}
-    >
-      {/* Header Area */}
-      <div className="flex-shrink-0">
-        {/* Title Bar */}
-        <div className="p-6 md:p-8 border-b border-white/5 flex justify-between items-center relative overflow-hidden h-20">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-          
-          <h2 className="text-lg md:text-xl font-mono font-bold text-white tracking-[0.2em] relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-            NEURAL LINK
-          </h2>
-          
-          <button 
-            onClick={onPinToggle}
-            className={`
-              p-2 rounded-full transition-all duration-300 active:scale-90
-              ${isPinned ? 'bg-white/10 text-cyber-accent' : 'text-gray-500 hover:text-white hover:bg-white/5'}
-            `}
-            title={isPinned ? "Unpin Sidebar" : "Pin Sidebar"}
-          >
-            {isPinned ? <Pin size={18} className="fill-current" /> : <PinOff size={18} />}
-          </button>
+    <>
+      {/* Mobile Overlay / Backdrop - Integrated here for correct z-indexing and state sync */}
+      <div 
+        className={`
+          md:hidden fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm 
+          transition-opacity duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+          ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+        `}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      <div 
+        onMouseEnter={onHoverStart}
+        onMouseLeave={onHoverEnd}
+        className={`
+          fixed top-0 left-0 h-full z-[60] 
+          w-[85vw] max-w-[320px] md:w-80
+          bg-cyber-black/95 backdrop-blur-2xl border-r border-white/5
+          shadow-[20px_0_50px_rgba(0,0,0,0.3)] 
+          transform-gpu transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          flex flex-col
+        `}
+        style={{ willChange: 'transform' }}
+      >
+        {/* Header Area */}
+        <div className="flex-shrink-0">
+          {/* Title Bar */}
+          <div className="p-6 md:p-8 border-b border-white/5 flex justify-between items-center relative overflow-hidden h-20">
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+            
+            <h2 className="text-lg md:text-xl font-mono font-bold text-white tracking-[0.2em] relative z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+              NEURAL LINK
+            </h2>
+            
+            <button 
+              onClick={onPinToggle}
+              className={`
+                p-2 rounded-full transition-all duration-300 active:scale-90
+                ${isPinned ? 'bg-white/10 text-cyber-accent' : 'text-gray-500 hover:text-white hover:bg-white/5'}
+              `}
+              title={isPinned ? "Unpin Sidebar" : "Pin Sidebar"}
+            >
+              {isPinned ? <Pin size={18} className="fill-current" /> : <PinOff size={18} />}
+            </button>
+          </div>
+
+          {/* Language Selector */}
+          <div className="px-6 py-4 border-b border-white/5">
+            <div className="flex items-center gap-2 mb-2 text-gray-500 text-[10px] font-mono uppercase tracking-widest">
+              <Globe size={10} />
+              <span>Language Interface</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2"> 
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => onLanguageChange(lang.code)}
+                  className={`
+                    px-1 py-1.5 rounded-lg text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-all
+                    ${currentLanguage === lang.code 
+                      ? 'bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30' 
+                      : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10 hover:text-white'}
+                  `}
+                >
+                  <span>{lang.flag}</span>
+                  <span>{lang.code.toUpperCase()}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Language Selector */}
-        <div className="px-6 py-4 border-b border-white/5">
-          <div className="flex items-center gap-2 mb-2 text-gray-500 text-[10px] font-mono uppercase tracking-widest">
-            <Globe size={10} />
-            <span>Language Interface</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2"> 
-            {SUPPORTED_LANGUAGES.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => onLanguageChange(lang.code)}
-                className={`
-                  px-1 py-1.5 rounded-lg text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-all
-                  ${currentLanguage === lang.code 
-                    ? 'bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30' 
-                    : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10 hover:text-white'}
-                `}
-              >
-                <span>{lang.flag}</span>
-                <span>{lang.code.toUpperCase()}</span>
-              </button>
+        {/* Scrollable Agent List Area */}
+        <div className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-6 min-h-0 flex flex-col">
+          <p className="text-[10px] font-mono text-gray-500 mb-2 md:mb-4 uppercase tracking-widest pl-2 opacity-70 flex-shrink-0">
+            {t.selectModel}
+          </p>
+          
+          <div className="space-y-2 md:space-y-3 flex-grow">
+            {agents.map((agent) => (
+              <AgentItem 
+                key={agent.id} 
+                agent={agent} 
+                isActive={currentAgent.id === agent.id} 
+                onClick={() => onSelectAgent(agent)} 
+              />
             ))}
           </div>
+          
+          <div className="mt-6 md:mt-8 p-4 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group flex-shrink-0">
+            <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+            <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
+              {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Scrollable Agent List Area */}
-      <div className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-6 min-h-0 flex flex-col">
-        <p className="text-[10px] font-mono text-gray-500 mb-2 md:mb-4 uppercase tracking-widest pl-2 opacity-70 flex-shrink-0">
-          {t.selectModel}
-        </p>
-        
-        <div className="space-y-2 md:space-y-3 flex-grow">
-          {agents.map((agent) => (
-            <AgentItem 
-              key={agent.id} 
-              agent={agent} 
-              isActive={currentAgent.id === agent.id} 
-              onClick={() => onSelectAgent(agent)} 
-            />
-          ))}
-        </div>
-        
-        <div className="mt-6 md:mt-8 p-4 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group flex-shrink-0">
-          <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-          <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
-            {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>
+        {/* Footer Credit (Fixed at bottom) */}
+        <div className="flex-shrink-0 p-6 border-t border-white/5 bg-black/40 backdrop-blur-md z-10">
+          <p className="text-[10px] font-mono text-center text-gray-600 tracking-widest uppercase hover:text-cyber-accent transition-colors duration-300 cursor-default">
+            Made By Hernata FTIG
           </p>
         </div>
       </div>
-
-      {/* Footer Credit (Fixed at bottom) */}
-      <div className="flex-shrink-0 p-6 border-t border-white/5 bg-black/40 backdrop-blur-md z-10">
-        <p className="text-[10px] font-mono text-center text-gray-600 tracking-widest uppercase hover:text-cyber-accent transition-colors duration-300 cursor-default">
-          Made By Hernata FTIG
-        </p>
-      </div>
-    </div>
+    </>
   );
 };
 

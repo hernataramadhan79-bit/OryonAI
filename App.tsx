@@ -399,6 +399,7 @@ const App: React.FC = () => {
         onPinToggle={() => setIsSidebarPinned(!isSidebarPinned)}
         onHoverStart={() => setIsSidebarHovered(true)}
         onHoverEnd={() => setIsSidebarHovered(false)}
+        onClose={() => { setIsSidebarPinned(false); setIsSidebarHovered(false); }}
         agents={agents}
         currentAgent={currentAgent}
         onSelectAgent={handleAgentChange}
@@ -406,10 +407,7 @@ const App: React.FC = () => {
         onLanguageChange={setCurrentLanguage}
       />
 
-      <div 
-        className={`md:hidden fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => { setIsSidebarPinned(false); setIsSidebarHovered(false); }}
-      ></div>
+      {/* External Overlay removed; managed internally by Sidebar now */}
 
       <div 
         className={`flex-grow flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] relative
