@@ -83,7 +83,11 @@ const App: React.FC = () => {
     } else {
       setInitialWelcome(currentUser.displayName, currentAgent);
     }
-    setIsMemoryLoaded(true);
+    
+    // Add small delay to smooth out the transition from login to chat
+    setTimeout(() => {
+      setIsMemoryLoaded(true);
+    }, 800);
   }, [currentUser]); 
 
   // Update system instruction when language changes

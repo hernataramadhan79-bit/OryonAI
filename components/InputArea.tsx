@@ -145,11 +145,11 @@ const InputArea: React.FC<InputAreaProps> = ({
     <div 
       className={`fixed bottom-0 right-0 z-20 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         w-full ${isSidebarPinned ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
-        pb-[calc(env(safe-area-inset-bottom)+10px)] bg-transparent
+        pb-[calc(env(safe-area-inset-bottom)+10px)] bg-transparent pointer-events-none
       `}
     >
-      {/* Input Container Wrapper for Floating Effect */}
-      <div className="relative w-full max-w-3xl mx-auto px-4 md:px-4">
+      {/* Input Container Wrapper for Floating Effect - Pointer events auto to re-enable interaction */}
+      <div className="relative w-full max-w-3xl mx-auto px-4 md:px-4 pointer-events-auto">
           
           {/* Attachment Preview */}
           {attachment && (

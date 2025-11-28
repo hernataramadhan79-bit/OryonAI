@@ -86,6 +86,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
   const isStreaming = !!message.isStreaming;
 
   // CSS Variable for Agent Accent Color to be used in Prose
+  // NOTE: We pass this via style prop instead of injecting a <style> tag to prevent layout thrashing/glitching
   const containerStyle = {
     '--agent-accent': hexColor,
   } as React.CSSProperties;

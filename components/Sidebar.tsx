@@ -86,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onHoverEnd,
   agents, 
   currentAgent, 
-  onSelectAgent,
+  onSelectAgent, 
   currentLanguage,
   onLanguageChange
 }) => {
