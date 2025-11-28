@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { GenerateContentResponse, Content, Part } from "@google/genai";
 import { Trash2, AlertCircle, LogOut, Menu, Cpu, Terminal, Briefcase } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, User, Agent, LanguageCode } from './types';
-import { sendMessageStream, resetChat, initializeChat, AGENTS } from './services/geminiService';
+import { sendMessageStream, resetChat, initializeChat, getAgents } from './services/geminiService';
 import { getSessionUser, logoutUser } from './services/authService';
 import ChatMessage from './components/ChatMessage';
 import InputArea from './components/InputArea';
@@ -12,11 +12,9 @@ import Sidebar from './components/Sidebar';
 import { getTranslation, getSystemLanguageInstruction, SUPPORTED_LANGUAGES } from './utils/translations';
 
 const App: React.FC = () => {
-  // Initialize state directly from storage to avoid flash of login screen
   const [currentUser, setCurrentUser] = useState<User | null>(() => getSessionUser());
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en');
   
-  // Sync language with user profile on load
   useEffect(() => {
     if (currentUser && currentUser.language) {
       setCurrentUser(prev => prev ? ({...prev, language: currentUser.language}) : null);
@@ -24,31 +22,31 @@ const App: React.FC = () => {
     }
   }, [currentUser]);
 
-  // State for the CURRENT active conversation
+  // Dynamic Agents based on Language
+  const agents = useMemo(() => getAgents(currentLanguage), [currentLanguage]);
+
   const [messages, setMessages] = useState<Message[]>([]);
-  
-  // State to hold ALL histories: { 'oryon-default': [...], 'devcore': [...] }
   const [historyStore, setHistoryStore] = useState<Record<string, Message[]>>({});
-  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Memory Loaded Flag - Defaults to FALSE to show loader first
   const [isMemoryLoaded, setIsMemoryLoaded] = useState(false);
   
-  // Agent State
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
-  const [currentAgent, setCurrentAgent] = useState<Agent>(AGENTS[0]);
-
-  // Voice/TTS State
-  const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
-
-  // Responsive Sidebar Logic
-  const isSidebarOpen = isSidebarPinned || isSidebarHovered;
   
-  // Translations
+  // Initialize with the first agent from the dynamic list
+  const [currentAgent, setCurrentAgent] = useState<Agent>(agents[0]);
+
+  // SYNC AGENT CONTENT WHEN LANGUAGE CHANGES
+  useEffect(() => {
+    // When agents list updates (due to lang change), find the current agent by ID in the new list
+    const updatedAgent = agents.find(a => a.id === currentAgent.id) || agents[0];
+    setCurrentAgent(updatedAgent);
+  }, [agents]); // Dependency on 'agents' which depends on 'currentLanguage'
+
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
+  const isSidebarOpen = isSidebarPinned || isSidebarHovered;
   const t = getTranslation(currentLanguage);
 
   // Helper to combine agent instruction with language instruction
@@ -56,22 +54,18 @@ const App: React.FC = () => {
     return agentInstruction + getSystemLanguageInstruction(lang);
   };
 
-  // Load Memory (Multi-Agent) - ROBUST IMPLEMENTATION
   useEffect(() => {
     let isMounted = true;
-
     if (!currentUser) {
       setIsMemoryLoaded(false);
       return;
     }
 
-    // Async function to handle memory loading safely
     const loadMemory = async () => {
       try {
         const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
         const savedData = localStorage.getItem(userStorageKey);
         
-        // Artificial small delay to allow UI transition to settle
         await new Promise(resolve => setTimeout(resolve, 500));
         
         if (!isMounted) return;
@@ -101,28 +95,23 @@ const App: React.FC = () => {
       }
     };
 
-    // Reset memory loaded state when user changes to force re-init
     setIsMemoryLoaded(false);
     loadMemory();
 
     return () => {
       isMounted = false;
     };
-    
-  }, [currentUser]); // Depend ONLY on currentUser to prevent re-loops
+  }, [currentUser]); 
 
-  // Update system instruction when language changes
   useEffect(() => {
     if (isMemoryLoaded && messages.length > 0) {
-      // Re-initialize chat with new language instruction but keep history
+      // Re-initialize chat with new language instruction AND new agent instruction
       initializeGeminiWithHistory(messages, getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage));
     }
-  }, [currentLanguage]);
+  }, [currentLanguage, currentAgent]); // Re-init if language or agent (translated) changes
 
-  // Helper to re-init Gemini context
   const initializeGeminiWithHistory = (msgs: Message[], instruction: string) => {
     resetChat(); 
-    
     const validHistory: Content[] = [];
     msgs.forEach(m => {
       if (m.type === 'text' && !m.isStreaming) {
@@ -135,9 +124,7 @@ const App: React.FC = () => {
              }
            });
          }
-         if (m.text) {
-           parts.push({ text: m.text });
-         }
+         if (m.text) parts.push({ text: m.text });
          
          if (parts.length > 0) {
             validHistory.push({
@@ -147,15 +134,11 @@ const App: React.FC = () => {
          }
       }
     });
-    
     initializeChat(validHistory, instruction);
   };
 
-  // Save Memory (Update Store when Messages Change)
   useEffect(() => {
     if (currentUser && isMemoryLoaded) {
-       // PERFORMANCE FIX: Don't write to localStorage while streaming (high frequency updates)
-       // Wait until the message is finished (isStreaming = false)
        const lastMsg = messages[messages.length - 1];
        if (lastMsg && lastMsg.isStreaming) return;
 
@@ -166,25 +149,19 @@ const App: React.FC = () => {
        
        const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
        localStorage.setItem(userStorageKey, JSON.stringify(updatedStore));
-       
        setHistoryStore(updatedStore);
     }
   }, [messages, currentUser, isMemoryLoaded, currentAgent.id]);
 
-  // Speech Synthesis Helper
   const speakText = (text: string) => {
     if (!isSpeechEnabled || !window.speechSynthesis) return;
-    
     window.speechSynthesis.cancel();
 
-    // Clean text for speech (remove markdown symbols roughly)
     const cleanText = text.replace(/[*_#`]/g, '');
-    
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
     
-    // Select voice based on language code
     const voices = window.speechSynthesis.getVoices();
     const langDef = SUPPORTED_LANGUAGES.find(l => l.code === currentLanguage);
     const targetVoiceCode = langDef?.voiceCode || 'en-US';
@@ -198,13 +175,11 @@ const App: React.FC = () => {
       utterance.voice = preferredVoice;
       utterance.lang = preferredVoice.lang;
     }
-
     window.speechSynthesis.speak(utterance);
   };
 
   const setInitialWelcome = (name: string, agent: Agent) => {
     const welcomeText = `Hello ${name}, ${agent.name} ${t.aiWelcome}`;
-
     const welcomeMsg: Message = {
       id: 'welcome-' + uuidv4(),
       role: 'model',
@@ -213,10 +188,8 @@ const App: React.FC = () => {
       isStreaming: false,
       type: 'text'
     };
-    
     setMessages([welcomeMsg]);
     initializeChat([], getFullSystemInstruction(agent.systemInstruction, currentLanguage));
-    
     if (isSpeechEnabled) speakText(welcomeText);
   };
 
@@ -230,7 +203,6 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
-    // Explicitly resetting memory loaded state to force the loading UI
     setIsMemoryLoaded(false);
     if (user.language) {
       setCurrentLanguage(user.language);
@@ -271,7 +243,6 @@ const App: React.FC = () => {
         setInitialWelcome(currentUser?.displayName || 'User', newAgent);
     }
     
-    // Mobile UX: Close sidebar after selection
     if (window.innerWidth < 768) {
       setIsSidebarPinned(false);
       setIsSidebarHovered(false);
@@ -302,9 +273,7 @@ const App: React.FC = () => {
              }
            });
          }
-         if (m.text) {
-           parts.push({ text: m.text });
-         }
+         if (m.text) parts.push({ text: m.text });
          
          if (parts.length > 0) {
             historyContext.push({
@@ -330,9 +299,7 @@ const App: React.FC = () => {
         accumulatedText += chunkText;
         setMessages((prev) => 
           prev.map((msg) => 
-            msg.id === aiMessageId 
-              ? { ...msg, text: accumulatedText } 
-              : msg
+            msg.id === aiMessageId ? { ...msg, text: accumulatedText } : msg
           )
         );
       }
@@ -340,9 +307,7 @@ const App: React.FC = () => {
 
     setMessages((prev) => 
       prev.map((msg) => 
-        msg.id === aiMessageId 
-              ? { ...msg, isStreaming: false } 
-              : msg
+        msg.id === aiMessageId ? { ...msg, isStreaming: false } : msg
       )
     );
 
@@ -368,7 +333,6 @@ const App: React.FC = () => {
     try {
       const aiMessageId = uuidv4();
       await handleChatFlow(text, aiMessageId, attachment);
-
     } catch (err: any) {
       console.error(err);
       setError(err.message || t.errorGeneric);
@@ -383,11 +347,7 @@ const App: React.FC = () => {
     window.speechSynthesis.cancel();
     resetChat();
     
-    const updatedStore = {
-        ...historyStore,
-        [currentAgent.id]: []
-    };
-    
+    const updatedStore = { ...historyStore, [currentAgent.id]: [] };
     setHistoryStore(updatedStore);
     const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
     localStorage.setItem(userStorageKey, JSON.stringify(updatedStore));
@@ -417,8 +377,6 @@ const App: React.FC = () => {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // FIX: Glitch Prevention. 
-  // Return a stable dark loading screen.
   if (!isMemoryLoaded) {
     return (
       <div className="min-h-screen bg-cyber-black flex items-center justify-center animate-fade-in-up">
@@ -434,43 +392,36 @@ const App: React.FC = () => {
   }
 
   return (
-    // Add Key to force remount on user change to prevent UI state staleness
     <div key={currentUser.username} className="min-h-screen flex flex-col font-sans bg-cyber-black text-gray-200 overflow-hidden selection:bg-cyber-accent selection:text-black transition-colors duration-500">
-      
       <Sidebar 
         isOpen={isSidebarOpen} 
         isPinned={isSidebarPinned}
         onPinToggle={() => setIsSidebarPinned(!isSidebarPinned)}
         onHoverStart={() => setIsSidebarHovered(true)}
         onHoverEnd={() => setIsSidebarHovered(false)}
-        agents={AGENTS}
+        agents={agents}
         currentAgent={currentAgent}
         onSelectAgent={handleAgentChange}
         currentLanguage={currentLanguage}
         onLanguageChange={setCurrentLanguage}
       />
 
-      {/* Overlay backdrop for mobile when sidebar is open - High Z-Index to cover Input */}
       <div 
         className={`md:hidden fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => { setIsSidebarPinned(false); setIsSidebarHovered(false); }}
       ></div>
 
-      {/* Main Content Wrapper */}
       <div 
         className={`flex-grow flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] relative
           ${isSidebarPinned ? 'md:pl-80' : 'pl-0'} 
         `}
       >
-        {/* Header */}
         <header className={`
           fixed top-0 right-0 z-30 backdrop-blur-xl border-b h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
           bg-cyber-black/60 border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]
           w-full ${isSidebarPinned ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
         `}>
-          
           <div className="flex items-center gap-3 md:gap-6">
-            {/* Menu Button */}
             <button 
               onClick={() => setIsSidebarPinned(!isSidebarPinned)}
               className={`
@@ -483,7 +434,6 @@ const App: React.FC = () => {
               <Menu size={20} />
             </button>
 
-            {/* Brand */}
             <div className="flex items-center gap-3">
               <div className="relative group">
                 <div className={`absolute inset-0 blur-xl opacity-60 animate-pulse-slow ${currentAgent.themeColor.replace('text-', 'bg-')}`}></div>
@@ -500,10 +450,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Actions */}
           <div className="flex items-center gap-3 md:gap-4">
-            
-            {/* Clear Chat Button */}
             {messages.length > 0 && (
               <button
                 onClick={handleClearChat}
@@ -533,7 +480,6 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {/* Chat Area - Adjusted padding for mobile */}
         <main className="flex-grow overflow-y-auto overflow-x-hidden px-3 md:px-8 pt-24 pb-48 md:pb-32 custom-scrollbar flex flex-col items-center">
             <div className="w-full max-w-3xl">
                {messages.map((msg) => (
@@ -563,7 +509,6 @@ const App: React.FC = () => {
             </div>
         </main>
 
-        {/* Input Area */}
         <InputArea 
           onSend={handleSendMessage} 
           isLoading={isLoading}
@@ -573,7 +518,6 @@ const App: React.FC = () => {
           currentLanguage={currentLanguage}
           agentTheme={currentAgent.themeColor}
         />
-
       </div>
     </div>
   );
