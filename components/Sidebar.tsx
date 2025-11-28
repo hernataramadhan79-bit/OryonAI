@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { X, Cpu, Terminal, Briefcase, Pin, PinOff, Globe } from 'lucide-react';
+import { Pin, PinOff, Globe, Terminal, Briefcase, Cpu } from 'lucide-react';
 import { Agent, LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 
@@ -35,7 +35,7 @@ const AgentItem: React.FC<AgentItemProps> = memo(({ agent, isActive, onClick }) 
     onClick={onClick}
     className={`
       w-full text-left relative group p-3 md:p-4 rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] overflow-hidden
-      border transform-gpu
+      border transform-gpu flex-shrink-0
       ${isActive 
         ? `bg-white/10 border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-md translate-x-2` 
         : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10 hover:backdrop-blur-sm hover:shadow-lg'}
@@ -43,8 +43,7 @@ const AgentItem: React.FC<AgentItemProps> = memo(({ agent, isActive, onClick }) 
     `}
   >
     <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-1000 ease-in-out transform translate-x-[-100%] group-hover:translate-x-[100%] pointer-events-none`}></div>
-    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50"></div>
-
+    
     <div className="relative z-10 flex items-start gap-3 md:gap-4">
       <div className={`
         p-2.5 md:p-3 rounded-xl flex items-center justify-center transition-all duration-500
@@ -101,12 +100,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         shadow-[20px_0_50px_rgba(0,0,0,0.3)] 
         transform-gpu transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        flex flex-col justify-between
+        flex flex-col
       `}
       style={{ willChange: 'transform' }}
     >
-      <div>
-        {/* Header */}
+      {/* Header Area */}
+      <div className="flex-shrink-0">
+        {/* Title Bar */}
         <div className="p-6 md:p-8 border-b border-white/5 flex justify-between items-center relative overflow-hidden h-20">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
           
@@ -114,7 +114,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             NEURAL LINK
           </h2>
           
-          {/* Pin/Unpin Toggle */}
           <button 
             onClick={onPinToggle}
             className={`
@@ -127,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Language Selector (Compact) */}
+        {/* Language Selector */}
         <div className="px-6 py-4 border-b border-white/5">
           <div className="flex items-center gap-2 mb-2 text-gray-500 text-[10px] font-mono uppercase tracking-widest">
             <Globe size={10} />
@@ -151,33 +150,35 @@ const Sidebar: React.FC<SidebarProps> = ({
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Agent List */}
-        <div className="p-4 md:p-6 space-y-4 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 350px)' }}>
-          <p className="text-[10px] font-mono text-gray-500 mb-2 md:mb-4 uppercase tracking-widest pl-2 opacity-70">{t.selectModel}</p>
-          
-          <div className="space-y-2 md:space-y-3">
-            {agents.map((agent) => (
-              <AgentItem 
-                key={agent.id} 
-                agent={agent} 
-                isActive={currentAgent.id === agent.id} 
-                onClick={() => onSelectAgent(agent)} 
-              />
-            ))}
-          </div>
-          
-          <div className="mt-8 md:mt-10 p-4 md:p-6 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
-              {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>
-            </p>
-          </div>
+      {/* Scrollable Agent List Area */}
+      <div className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-6 min-h-0 flex flex-col">
+        <p className="text-[10px] font-mono text-gray-500 mb-2 md:mb-4 uppercase tracking-widest pl-2 opacity-70 flex-shrink-0">
+          {t.selectModel}
+        </p>
+        
+        <div className="space-y-2 md:space-y-3 flex-grow">
+          {agents.map((agent) => (
+            <AgentItem 
+              key={agent.id} 
+              agent={agent} 
+              isActive={currentAgent.id === agent.id} 
+              onClick={() => onSelectAgent(agent)} 
+            />
+          ))}
+        </div>
+        
+        <div className="mt-6 md:mt-8 p-4 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group flex-shrink-0">
+          <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+          <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
+            {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>
+          </p>
         </div>
       </div>
 
-      {/* Footer Credit */}
-      <div className="p-6 border-t border-white/5 bg-black/20">
+      {/* Footer Credit (Fixed at bottom) */}
+      <div className="flex-shrink-0 p-6 border-t border-white/5 bg-black/40 backdrop-blur-md z-10">
         <p className="text-[10px] font-mono text-center text-gray-600 tracking-widest uppercase hover:text-cyber-accent transition-colors duration-300 cursor-default">
           Made By Hernata FTIG
         </p>

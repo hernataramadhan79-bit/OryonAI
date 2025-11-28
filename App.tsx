@@ -441,7 +441,7 @@ const App: React.FC = () => {
 
       {/* Overlay backdrop for mobile when sidebar is open */}
       <div 
-        className={`md:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        className={`md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => { setIsSidebarPinned(false); setIsSidebarHovered(false); }}
       ></div>
 
@@ -453,7 +453,7 @@ const App: React.FC = () => {
       >
         {/* Header */}
         <header className={`
-          fixed top-0 right-0 z-20 backdrop-blur-xl border-b h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+          fixed top-0 right-0 z-30 backdrop-blur-xl border-b h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
           bg-cyber-black/60 border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]
           w-full ${isSidebarPinned ? 'md:w-[calc(100%-20rem)]' : 'md:w-full'}
         `}>

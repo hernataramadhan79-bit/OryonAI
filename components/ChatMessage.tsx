@@ -51,7 +51,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
         
         {/* Code Area */}
         <div className="p-3 overflow-x-auto custom-scrollbar">
-          <code className={className} {...props} style={{ fontSize: '13px', lineHeight: '1.5', fontFamily: 'monospace' }}>
+          <code className={className} {...props} style={{ fontSize: '13px', lineHeight: '1.5', fontFamily: 'monospace', whiteSpace: 'pre' }}>
             {children}
           </code>
         </div>
@@ -67,13 +67,21 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
   );
 });
 
+// Custom Table Renderer to ensure scrolling on mobile
+const TableRenderer = ({ children, ...props }: any) => (
+  <div className="w-full my-5 overflow-x-auto rounded-lg border border-white/10">
+    <table className="w-full border-collapse text-sm min-w-[500px]" {...props}>
+      {children}
+    </table>
+  </div>
+);
+
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
   const isUser = message.role === 'user';
   const isImage = message.type === 'image';
   
   // Derive styling based on role
   const themeColor = agentTheme || 'text-cyber-accent';
-  const borderColor = themeColor.replace('text-', 'border-');
   const hexColor = getThemeHex(themeColor);
 
   // Determine animation class based on sender
@@ -139,7 +147,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
               </div>
             )}
 
-            {/* Generated Image Message */}
+            {/* Generated Image Message (if enabled in future) */}
             {isImage && message.imageUrl ? (
               <div className="group/image relative rounded-2xl overflow-hidden border border-white/10 bg-black/50 shadow-2xl transition-transform duration-500">
                 <img 
@@ -148,30 +156,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                   className="w-full h-auto max-w-md object-cover"
                   loading="lazy"
                 />
-                <div className="absolute top-3 right-3 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300">
-                  <a 
-                    href={`data:image/jpeg;base64,${message.imageUrl}`} 
-                    download={`oryon-art-${message.id}.jpg`}
-                    className="bg-black/60 hover:bg-white/20 hover:text-white text-gray-200 p-2.5 rounded-xl backdrop-blur-xl border border-white/10 transition-all flex items-center justify-center active:scale-90"
-                    title="Download"
-                  >
-                    <Download size={20} />
-                  </a>
-                </div>
               </div>
             ) : null}
 
             {/* Text Content OR Loading Indicator */}
             {(!isImage) && (
-              <div className={`${(isImage || message.attachment) ? 'mt-4' : ''} ${!isUser ? 'w-full' : ''}`}>
+              <div className={`${(isImage || message.attachment) ? 'mt-4' : ''} ${!isUser ? 'w-full min-w-0' : ''}`}>
                  {isUser ? (
-                  <p className="whitespace-pre-wrap font-sans">{message.text}</p>
+                  <p className="whitespace-pre-wrap font-sans break-words">{message.text}</p>
                 ) : (
                    <>
                      {isThinking ? (
                         <TypingIndicator themeColor={agentTheme} />
                      ) : (
-                       <div className="prose prose-invert prose-base max-w-none
+                       <div className="prose prose-invert prose-base max-w-none break-words
                          /* 
                             GEMINI-LIKE TYPOGRAPHY 
                             Refined for structure, clarity, and modern aesthetics.
@@ -191,10 +189,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                          [&_li::marker]:text-[var(--agent-accent)]
                          
                          /* Links */
-                         prose-a:text-[var(--agent-accent)] prose-a:no-underline hover:prose-a:underline
+                         prose-a:text-[var(--agent-accent)] prose-a:no-underline hover:prose-a:underline prose-a:break-all
                          
-                         /* Tables (Clean Data Grid) */
-                         prose-table:w-full prose-table:my-5 prose-table:border-collapse prose-table:text-sm prose-table:rounded-lg prose-table:overflow-hidden prose-table:border prose-table:border-white/10
+                         /* Tables are handled by Custom Component now for scrolling */
                          prose-thead:bg-white/5
                          prose-th:text-left prose-th:p-3 prose-th:text-gray-100 prose-th:font-semibold prose-th:border-b prose-th:border-r prose-th:border-white/10 last:prose-th:border-r-0
                          prose-td:p-3 prose-td:border-b prose-td:border-r prose-td:border-white/5 prose-td:text-gray-300 last:prose-td:border-r-0
@@ -212,7 +209,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                          <ReactMarkdown 
                            remarkPlugins={[remarkGfm]}
                            components={{
-                             code: CodeBlock
+                             code: CodeBlock,
+                             table: TableRenderer
                            }}
                          >
                            {message.text}
