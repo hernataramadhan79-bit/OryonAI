@@ -35,7 +35,7 @@ export interface Agent {
   iconId: 'cpu' | 'terminal' | 'briefcase'; // Removed 'feather' and 'image'
 }
 
-export type LanguageCode = 'en' | 'id' | 'ja' | 'es' | 'fr' | 'de';
+export type LanguageCode = 'en' | 'id';
 
 export interface LanguageDefinition {
   code: LanguageCode;

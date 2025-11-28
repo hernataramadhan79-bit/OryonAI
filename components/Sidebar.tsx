@@ -132,7 +132,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Globe size={10} />
             <span>Language Interface</span>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2"> 
             {SUPPORTED_LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
