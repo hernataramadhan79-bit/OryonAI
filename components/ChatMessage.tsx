@@ -25,25 +25,25 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
   if (!inline && match) {
     return (
-      <div className="my-6 rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm shadow-xl w-full max-w-full group transition-all duration-300 hover:border-white/20">
+      <div className="my-6 rounded-lg overflow-hidden border border-white/10 bg-[#0d0d0d] shadow-md w-full max-w-full group">
         {/* Header Language Label */}
-        <div className="bg-white/5 px-4 py-2 border-b border-white/5 flex items-center justify-between">
-          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">
+        <div className="bg-[#1a1a1a] px-4 py-2 flex items-center justify-between border-b border-white/5">
+          <span className="text-xs font-sans text-gray-400 font-medium">
             {match[1]}
           </span>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-2 py-1 rounded-lg text-[10px] font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-95"
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white transition-colors"
           >
             {isCopied ? (
               <>
-                <Check size={12} className="text-green-400" />
-                <span className="text-green-400">COPIED</span>
+                <Check size={14} className="text-green-400" />
+                <span className="text-green-400">Copied</span>
               </>
             ) : (
               <>
-                <Copy size={12} />
-                <span>COPY</span>
+                <Copy size={14} />
+                <span>Copy</span>
               </>
             )}
           </button>
@@ -51,7 +51,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
         
         {/* Code Area */}
         <div className="p-4 overflow-x-auto custom-scrollbar">
-          <code className={className} {...props}>
+          <code className={className} {...props} style={{ fontSize: '13px', lineHeight: '1.5', fontFamily: 'monospace' }}>
             {children}
           </code>
         </div>
@@ -61,7 +61,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
   // Inline Code
   return (
-    <code className="bg-white/10 px-1.5 py-0.5 rounded-md text-sm font-mono text-gray-200 border border-white/10" {...props}>
+    <code className="bg-white/10 px-1.5 py-0.5 rounded text-[13px] font-mono text-gray-100 border border-white/5" {...props}>
       {children}
     </code>
   );
@@ -86,27 +86,26 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
   const isStreaming = !!message.isStreaming;
 
   // CSS Variable for Agent Accent Color to be used in Prose
-  // NOTE: We pass this via style prop instead of injecting a <style> tag to prevent layout thrashing/glitching
   const containerStyle = {
     '--agent-accent': hexColor,
   } as React.CSSProperties;
 
   return (
     <div 
-      className={`flex w-full mb-8 md:mb-10 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
+      className={`flex w-full mb-6 md:mb-8 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
       style={containerStyle}
     >
       
-      <div className={`flex max-w-full md:max-w-[85%] gap-2 md:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`flex max-w-full md:max-w-[85%] gap-3 md:gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
         
-        {/* Avatar - Glassy */}
+        {/* Avatar */}
         <div className={`
-          flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center border backdrop-blur-xl mt-1 transition-all duration-500 shadow-lg group
+          flex-shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center border mt-1
           ${isUser 
-            ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' 
-            : `bg-white/5 border-white/10 ${themeColor} hover:bg-white/10`}
+            ? 'bg-white/5 border-white/10 text-gray-300' 
+            : `bg-white/5 border-white/10 ${themeColor}`}
         `}>
-          {isUser ? <User size={16} className="md:w-[18px] md:h-[18px]" /> : <Bot size={16} className="md:w-[18px] md:h-[18px]" />}
+          {isUser ? <User size={16} /> : <Bot size={18} />}
         </div>
 
         {/* Content Bubble */}
@@ -117,15 +116,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
         `}>
           <div 
             style={isStreaming && !isUser ? { 
-              boxShadow: `0 0 15px ${hexColor}15`,
-              borderColor: `${hexColor}50`
+              boxShadow: `0 0 10px ${hexColor}10`,
+              borderColor: `${hexColor}40`
             } : {}}
             className={`
-            group relative px-4 md:px-5 py-3 md:py-4 text-[14px] md:text-[15px] leading-relaxed transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] max-w-full backdrop-blur-xl shadow-sm
+            group relative px-4 md:px-6 py-3 md:py-5 text-[15px] md:text-[16px] leading-relaxed transition-all duration-500 max-w-full
             ${isUser 
-              ? 'bg-white/10 text-gray-100 rounded-[1.25rem] md:rounded-[1.5rem] rounded-tr-sm border border-white/10 w-fit' 
-              : `bg-black/40 text-gray-200 rounded-[1.25rem] md:rounded-[1.5rem] rounded-tl-sm border border-white/5 border-l-2 ${borderColor} w-full`} 
-            ${isImage ? 'p-0 bg-transparent border-none shadow-none w-fit !backdrop-blur-0' : ''}
+              ? 'bg-[#1e1e1e] text-gray-100 rounded-2xl rounded-tr-sm border border-white/10' 
+              : `bg-transparent text-gray-100 rounded-none w-full`} 
+            ${isImage ? 'p-0 bg-transparent border-none shadow-none w-fit' : ''}
           `}>
             
             {/* User Uploaded Attachment */}
@@ -142,7 +141,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
 
             {/* Generated Image Message */}
             {isImage && message.imageUrl ? (
-              <div className="group/image relative rounded-[1.5rem] overflow-hidden border border-white/10 bg-black/50 shadow-2xl transition-transform duration-500">
+              <div className="group/image relative rounded-2xl overflow-hidden border border-white/10 bg-black/50 shadow-2xl transition-transform duration-500">
                 <img 
                   src={`data:image/jpeg;base64,${message.imageUrl}`} 
                   alt="Generated Art" 
@@ -166,43 +165,47 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
             {(!isImage) && (
               <div className={`${(isImage || message.attachment) ? 'mt-4' : ''} ${!isUser ? 'w-full' : ''}`}>
                  {isUser ? (
-                  <p className="whitespace-pre-wrap font-sans font-medium tracking-wide">{message.text}</p>
+                  <p className="whitespace-pre-wrap font-sans">{message.text}</p>
                 ) : (
                    <>
                      {isThinking ? (
                         <TypingIndicator themeColor={agentTheme} />
                      ) : (
-                       <div className="prose prose-invert prose-sm max-w-none
-                         /* Typography Updates for Structured Response */
+                       <div className="prose prose-invert prose-base max-w-none
+                         /* 
+                            GEMINI-LIKE TYPOGRAPHY 
+                            Clean, spacious, high readability
+                         */
                          
-                         /* Paragraphs */
-                         prose-p:text-gray-300 prose-p:leading-7 prose-p:mb-4 last:prose-p:mb-0 prose-p:font-sans
+                         /* Body Text */
+                         prose-p:text-gray-200 prose-p:leading-7 prose-p:mb-5 last:prose-p:mb-0
                          
-                         /* Headings - Enhanced Visuals */
-                         prose-headings:text-white prose-headings:font-bold prose-headings:font-mono prose-headings:mt-8 prose-headings:mb-4 prose-headings:pb-2 prose-headings:border-b prose-headings:border-white/10
-                         prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-h3:text-[var(--agent-accent)] prose-h3:border-none
+                         /* Headings */
+                         prose-headings:text-white prose-headings:font-medium prose-headings:scroll-mt-20
+                         prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-white/10
+                         prose-h3:text-lg prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-[var(--agent-accent)]
                          
-                         /* Lists - Colored Markers using Dynamic CSS Var */
-                         prose-ul:my-4 prose-ul:list-disc prose-ul:pl-4 prose-ul:text-gray-300 prose-ul:space-y-2
-                         prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-4 prose-ol:text-gray-300 prose-ol:space-y-2
+                         /* Lists */
+                         prose-ul:my-5 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-gray-300 prose-ul:space-y-2
+                         prose-ol:my-5 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-gray-300 prose-ol:space-y-2
                          [&_li::marker]:text-[var(--agent-accent)]
                          
                          /* Links */
-                         prose-a:text-[var(--agent-accent)] prose-a:underline prose-a:decoration-[var(--agent-accent)]/30 hover:prose-a:text-white hover:prose-a:decoration-white
+                         prose-a:text-[var(--agent-accent)] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-white
                          
-                         /* Table Styling - Tech Data Grid */
-                         prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:text-sm prose-table:bg-white/5 prose-table:rounded-lg prose-table:overflow-hidden
-                         prose-thead:bg-white/5 prose-thead:border-b prose-thead:border-white/10
-                         prose-th:text-left prose-th:p-3 prose-th:text-[var(--agent-accent)] prose-th:font-bold prose-th:uppercase prose-th:tracking-wider prose-th:text-[10px] prose-th:font-mono
-                         prose-td:p-3 prose-td:border-b prose-td:border-white/5 prose-td:text-gray-300
+                         /* Tables (Data Grid Look) */
+                         prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:text-sm prose-table:rounded-lg prose-table:overflow-hidden prose-table:border prose-table:border-white/10
+                         prose-thead:bg-white/5
+                         prose-th:text-left prose-th:p-4 prose-th:text-gray-100 prose-th:font-semibold prose-th:border-b prose-th:border-white/10
+                         prose-td:p-4 prose-td:border-b prose-td:border-white/5 prose-td:text-gray-300 prose-tr:hover:bg-white/[0.02]
                          
-                         /* Blockquote */
-                         prose-blockquote:border-l-2 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/5 prose-blockquote:pl-4 prose-blockquote:py-3 prose-blockquote:my-4 prose-blockquote:rounded-r-lg prose-blockquote:text-gray-400 prose-blockquote:italic
+                         /* Blockquotes */
+                         prose-blockquote:border-l-4 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/[0.02] prose-blockquote:pl-6 prose-blockquote:py-2 prose-blockquote:my-6 prose-blockquote:rounded-r prose-blockquote:text-gray-400 prose-blockquote:not-italic
                          
                          /* Strong/Bold */
-                         prose-strong:text-white prose-strong:font-bold
+                         prose-strong:text-white prose-strong:font-semibold
                          
-                         /* HR */
+                         /* Horizontal Rule */
                          prose-hr:border-white/10 prose-hr:my-8
                        ">
                          <ReactMarkdown 
@@ -220,13 +223,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
               </div>
             )}
           </div>
-          
-          {/* Timestamp */}
-          {!isUser && (
-            <span className="text-[9px] text-gray-600 mt-2 ml-2 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-               {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
         </div>
       </div>
     </div>

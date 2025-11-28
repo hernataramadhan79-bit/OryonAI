@@ -12,32 +12,35 @@ try {
   ai = new GoogleGenAI({ apiKey: "INVALID_KEY" });
 }
 
+// Optimized for Free Tier High Performance
 const MODEL_NAME = 'gemini-2.5-flash';
-const IMAGE_MODEL_NAME = 'gemini-2.5-flash-image';
 
-// REUSABLE FORMATTING RULES FOR ALL AGENTS
+// REUSABLE FORMATTING RULES FOR ALL AGENTS - GEMINI STYLE
 const COMMON_FORMATTING_RULES = `
-    **VISUAL FORMATTING RULES (STRICT):**
+    **FORMATTING STANDARDS (GEMINI STYLE):**
     
-    1.  **STRUCTURED HEADINGS:**
-        *   Use H2 (##) for Main Section Titles. Add an Emoji.
-        *   Use H3 (###) for Sub-sections.
-        *   *Do not* use H1.
+    1.  **CLARITY & SPACING:**
+        *   Keep paragraphs short (2-3 sentences max).
+        *   Use extensive whitespace between sections.
+        *   **Bold** key concepts, entities, and important values for scannability.
     
-    2.  **SCANNABLE LISTS:**
-        *   Break complex information into Bullet Points (-) or Numbered Lists (1.).
-        *   Use nested lists for details.
+    2.  **STRUCTURE:**
+        *   Use **H2 (##)** for major sections.
+        *   Use **H3 (###)** for subsections.
+        *   Never use H1.
     
-    3.  **DATA TABLES (CRITICAL):**
-        *   If comparing 2+ items, creating a timeline, or listing specs, **YOU MUST USE A MARKDOWN TABLE**.
-        *   Do not use lists for comparative data.
+    3.  **LISTS OVER WALLS OF TEXT:**
+        *   Whenever possible, use Bullet Points (-) or Numbered Lists (1.).
+        *   Use nested lists for detailed breakdowns.
     
-    4.  **SEPARATORS:**
-        *   Use a horizontal rule (\`---\`) to separate the Introduction, Main Content, and Conclusion.
+    4.  **DATA PRESENTATION:**
+        *   Use **Markdown Tables** for comparisons, specs, or pros/cons.
+        *   Use \`Code Blocks\` for any technical commands or code.
+        *   Use > Blockquotes for summaries or important notes.
     
-    5.  **EMPHASIS:**
-        *   **Bold** key terms and variable names.
-        *   Use \`Code Spans\` for technical terms or short commands.`;
+    5.  **TONE:**
+        *   Direct, professional, and helpful.
+        *   Avoid fluff. Get straight to the answer.`;
 
 export const AGENTS: Agent[] = [
   {
@@ -49,12 +52,12 @@ export const AGENTS: Agent[] = [
     iconId: 'cpu',
     systemInstruction: `You are OryonAI.
     **IDENTITY:**
-    You are an AI assistant that provides **Highly Structured and Visual** answers.
+    You are a helpful, intelligent AI assistant.
     
     ${COMMON_FORMATTING_RULES}
     
     **LANGUAGE STYLE:**
-    *   Natural, friendly, but direct.
+    *   Natural, friendly, but professional.
     *   Prioritize clarity and readability.`
   },
   {
@@ -72,22 +75,6 @@ export const AGENTS: Agent[] = [
     **CODING RULES:**
     1.  **Code Blocks:** ALWAYS wrap code in \`\`\`language blocks.
     2.  **Explanations:** Keep text brief. Use comments // inside code for details.`
-  },
-  {
-    id: 'velocis',
-    name: 'Velocis',
-    role: 'Creative & Visual Engine',
-    description: 'Storytelling, creative writing, and visual art generation.',
-    themeColor: 'text-pink-400',
-    iconId: 'feather',
-    systemInstruction: `You are Velocis, a creative muse.
-    **IDENTITY:** Artistic, eloquent, vivid.
-    
-    ${COMMON_FORMATTING_RULES}
-
-    **STYLE:**
-    1.  Use evocative language. 
-    2.  Use separators (\`---\`) to structure narratives.`
   },
   {
     id: 'strategos',
@@ -199,76 +186,5 @@ export const sendMessageStream = async (
        }
        throw retryError;
     }
-  }
-};
-
-export const analyzeInputIntent = async (text: string): Promise<'DRAW' | 'CHAT'> => {
-  if (!text || !text.trim()) return 'CHAT';
-  
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Analyze: "${text}".
-      Return "DRAW" if the user explicitly wants to generate/create/visualize an image.
-      Return "CHAT" otherwise.
-      Respond ONLY with "DRAW" or "CHAT".`,
-    });
-
-    const intent = response.text?.trim().toUpperCase();
-    return intent === 'DRAW' ? 'DRAW' : 'CHAT';
-  } catch (e) {
-    return 'CHAT';
-  }
-};
-
-export const generateImage = async (prompt: string, attachment?: { data: string; mimeType: string }): Promise<string> => {
-  try {
-    const parts: Part[] = [];
-    
-    if (attachment) {
-      parts.push({
-        inlineData: {
-          data: attachment.data,
-          mimeType: attachment.mimeType
-        }
-      });
-    }
-    
-    parts.push({ text: prompt });
-
-    const response = await ai.models.generateContent({
-      model: IMAGE_MODEL_NAME,
-      contents: {
-        parts: parts
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: '1:1',
-        }
-      },
-    });
-
-    const candidate = response.candidates?.[0];
-    if (!candidate) throw new Error("No response from Gemini.");
-
-    let textResponse = '';
-    if (candidate.content?.parts) {
-      for (const part of candidate.content.parts) {
-        if (part.inlineData && part.inlineData.data) {
-          return part.inlineData.data;
-        }
-        if (part.text) {
-          textResponse += part.text;
-        }
-      }
-    }
-    
-    if (textResponse) throw new Error(textResponse);
-    throw new Error("No image generated.");
-  } catch (error: any) {
-    if (error.message?.includes('API key')) {
-        throw new Error("Missing API Key.");
-    }
-    throw error;
   }
 };

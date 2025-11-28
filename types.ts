@@ -4,7 +4,7 @@ export interface Message {
   text: string;
   timestamp: number;
   isStreaming?: boolean;
-  imageUrl?: string; // For AI generated images
+  imageUrl?: string; // Kept for backward compatibility with memory
   attachment?: {     // For User uploaded images
     data: string;
     mimeType: string;
@@ -32,7 +32,7 @@ export interface Agent {
   description: string;
   systemInstruction: string;
   themeColor: string;
-  iconId: 'cpu' | 'terminal' | 'feather' | 'briefcase' | 'image';
+  iconId: 'cpu' | 'terminal' | 'briefcase'; // Removed 'feather' and 'image'
 }
 
 export type LanguageCode = 'en' | 'id' | 'ja' | 'es' | 'fr' | 'de';

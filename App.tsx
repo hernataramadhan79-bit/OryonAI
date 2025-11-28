@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GenerateContentResponse, Content, Part } from "@google/genai";
-import { Trash2, AlertCircle, LogOut, Menu, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon } from 'lucide-react';
+import { Trash2, AlertCircle, LogOut, Menu, Cpu, Terminal, Briefcase } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, User, Agent, LanguageCode } from './types';
-import { sendMessageStream, resetChat, generateImage, initializeChat, analyzeInputIntent, AGENTS } from './services/geminiService';
+import { sendMessageStream, resetChat, initializeChat, AGENTS } from './services/geminiService';
 import { getSessionUser, logoutUser } from './services/authService';
 import ChatMessage from './components/ChatMessage';
 import InputArea from './components/InputArea';
@@ -354,44 +354,9 @@ const App: React.FC = () => {
 
     try {
       const aiMessageId = uuidv4();
-      let handled = false;
-
-      const intent = await analyzeInputIntent(text);
-
-      if (intent === 'DRAW') {
-        handled = true;
-        const loadingMsg: Message = {
-          id: aiMessageId,
-          role: 'model',
-          text: t.visualProcessing,
-          timestamp: Date.now(),
-          isStreaming: true,
-          type: 'text'
-        };
-        setMessages((prev) => [...prev, loadingMsg]);
-
-        const base64Image = await generateImage(text, attachment);
-        const successText = t.visualSuccess;
-
-        setMessages((prev) => 
-          prev.map((msg) => 
-            msg.id === aiMessageId 
-              ? { 
-                  ...msg, 
-                  text: successText, 
-                  imageUrl: base64Image,
-                  type: 'image',
-                  isStreaming: false 
-                } 
-              : msg
-          )
-        );
-        speakText(successText);
-      }
-
-      if (!handled) {
-        await handleChatFlow(text, aiMessageId, attachment);
-      }
+      
+      // Removed Analyze Intent & Draw Logic for Optimization
+      await handleChatFlow(text, aiMessageId, attachment);
 
     } catch (err: any) {
       console.error(err);
@@ -433,9 +398,7 @@ const App: React.FC = () => {
     const className = `w-6 h-6 relative z-10 transition-colors duration-500 ${currentAgent.themeColor}`;
     switch (iconId) {
       case 'terminal': return <Terminal className={className} />;
-      case 'feather': return <Feather className={className} />;
       case 'briefcase': return <Briefcase className={className} />;
-      case 'image': return <ImageIcon className={className} />;
       default: return <Cpu className={className} />;
     }
   };

@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { X, Cpu, Terminal, Feather, Briefcase, Image as ImageIcon, Pin, PinOff, Globe } from 'lucide-react';
+import { X, Cpu, Terminal, Briefcase, Pin, PinOff, Globe } from 'lucide-react';
 import { Agent, LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 
@@ -19,9 +19,7 @@ interface SidebarProps {
 const getIcon = (iconId: string) => {
   switch (iconId) {
     case 'terminal': return <Terminal size={20} />;
-    case 'feather': return <Feather size={20} />;
     case 'briefcase': return <Briefcase size={20} />;
-    case 'image': return <ImageIcon size={20} />;
     default: return <Cpu size={20} />;
   }
 };
