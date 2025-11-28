@@ -25,9 +25,9 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
   if (!inline && match) {
     return (
-      <div className="my-6 rounded-lg overflow-hidden border border-white/10 bg-[#0d0d0d] shadow-md w-full max-w-full group">
+      <div className="my-4 rounded-lg overflow-hidden border border-white/10 bg-[#0d0d0d] shadow-md w-full max-w-full group">
         {/* Header Language Label */}
-        <div className="bg-[#1a1a1a] px-4 py-2 flex items-center justify-between border-b border-white/5">
+        <div className="bg-[#1a1a1a] px-3 py-1.5 flex items-center justify-between border-b border-white/5">
           <span className="text-xs font-sans text-gray-400 font-medium">
             {match[1]}
           </span>
@@ -37,12 +37,12 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
           >
             {isCopied ? (
               <>
-                <Check size={14} className="text-green-400" />
+                <Check size={12} className="text-green-400" />
                 <span className="text-green-400">Copied</span>
               </>
             ) : (
               <>
-                <Copy size={14} />
+                <Copy size={12} />
                 <span>Copy</span>
               </>
             )}
@@ -50,7 +50,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
         </div>
         
         {/* Code Area */}
-        <div className="p-4 overflow-x-auto custom-scrollbar">
+        <div className="p-3 overflow-x-auto custom-scrollbar">
           <code className={className} {...props} style={{ fontSize: '13px', lineHeight: '1.5', fontFamily: 'monospace' }}>
             {children}
           </code>
@@ -92,7 +92,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
 
   return (
     <div 
-      className={`flex w-full mb-6 md:mb-8 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
+      className={`flex w-full mb-4 md:mb-6 ${animationClass} ${isUser ? 'justify-end' : 'justify-start'}`}
       style={containerStyle}
     >
       
@@ -120,7 +120,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
               borderColor: `${hexColor}40`
             } : {}}
             className={`
-            group relative px-4 md:px-6 py-3 md:py-5 text-[15px] md:text-[16px] leading-relaxed transition-all duration-500 max-w-full
+            group relative px-4 md:px-5 py-3 md:py-4 text-[15px] leading-relaxed transition-all duration-500 max-w-full
             ${isUser 
               ? 'bg-[#1e1e1e] text-gray-100 rounded-2xl rounded-tr-sm border border-white/10' 
               : `bg-transparent text-gray-100 rounded-none w-full`} 
@@ -174,39 +174,40 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                        <div className="prose prose-invert prose-base max-w-none
                          /* 
                             GEMINI-LIKE TYPOGRAPHY 
-                            Clean, spacious, high readability
+                            Refined for structure, clarity, and modern aesthetics.
                          */
                          
                          /* Body Text */
-                         prose-p:text-gray-200 prose-p:leading-7 prose-p:mb-5 last:prose-p:mb-0
+                         prose-p:text-gray-300 prose-p:leading-7 prose-p:mb-4 last:prose-p:mb-0
                          
                          /* Headings */
-                         prose-headings:text-white prose-headings:font-medium prose-headings:scroll-mt-20
-                         prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-white/10
-                         prose-h3:text-lg prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-[var(--agent-accent)]
+                         prose-headings:text-gray-100 prose-headings:font-semibold prose-headings:scroll-mt-20
+                         prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-white/10
+                         prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2 prose-h3:text-[var(--agent-accent)]
                          
                          /* Lists */
-                         prose-ul:my-5 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-gray-300 prose-ul:space-y-2
-                         prose-ol:my-5 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-gray-300 prose-ol:space-y-2
+                         prose-ul:my-3 prose-ul:list-disc prose-ul:pl-5 prose-ul:text-gray-300 prose-ul:space-y-1
+                         prose-ol:my-3 prose-ol:list-decimal prose-ol:pl-5 prose-ol:text-gray-300 prose-ol:space-y-1
                          [&_li::marker]:text-[var(--agent-accent)]
                          
                          /* Links */
-                         prose-a:text-[var(--agent-accent)] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-white
+                         prose-a:text-[var(--agent-accent)] prose-a:no-underline hover:prose-a:underline
                          
-                         /* Tables (Data Grid Look) */
-                         prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:text-sm prose-table:rounded-lg prose-table:overflow-hidden prose-table:border prose-table:border-white/10
+                         /* Tables (Clean Data Grid) */
+                         prose-table:w-full prose-table:my-5 prose-table:border-collapse prose-table:text-sm prose-table:rounded-lg prose-table:overflow-hidden prose-table:border prose-table:border-white/10
                          prose-thead:bg-white/5
-                         prose-th:text-left prose-th:p-4 prose-th:text-gray-100 prose-th:font-semibold prose-th:border-b prose-th:border-white/10
-                         prose-td:p-4 prose-td:border-b prose-td:border-white/5 prose-td:text-gray-300 prose-tr:hover:bg-white/[0.02]
+                         prose-th:text-left prose-th:p-3 prose-th:text-gray-100 prose-th:font-semibold prose-th:border-b prose-th:border-r prose-th:border-white/10 last:prose-th:border-r-0
+                         prose-td:p-3 prose-td:border-b prose-td:border-r prose-td:border-white/5 prose-td:text-gray-300 last:prose-td:border-r-0
+                         prose-tr:hover:bg-white/[0.02]
                          
                          /* Blockquotes */
-                         prose-blockquote:border-l-4 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/[0.02] prose-blockquote:pl-6 prose-blockquote:py-2 prose-blockquote:my-6 prose-blockquote:rounded-r prose-blockquote:text-gray-400 prose-blockquote:not-italic
+                         prose-blockquote:border-l-4 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/[0.02] prose-blockquote:pl-4 prose-blockquote:py-2 prose-blockquote:my-4 prose-blockquote:rounded-r prose-blockquote:text-gray-400 prose-blockquote:italic
                          
                          /* Strong/Bold */
-                         prose-strong:text-white prose-strong:font-semibold
+                         prose-strong:text-white prose-strong:font-bold
                          
                          /* Horizontal Rule */
-                         prose-hr:border-white/10 prose-hr:my-8
+                         prose-hr:border-white/10 prose-hr:my-6
                        ">
                          <ReactMarkdown 
                            remarkPlugins={[remarkGfm]}

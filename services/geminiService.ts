@@ -17,30 +17,28 @@ const MODEL_NAME = 'gemini-2.5-flash';
 
 // REUSABLE FORMATTING RULES FOR ALL AGENTS - GEMINI STYLE
 const COMMON_FORMATTING_RULES = `
-    **FORMATTING STANDARDS (GEMINI STYLE):**
+    **FORMATTING GUIDELINES (GEMINI STYLE):**
     
-    1.  **CLARITY & SPACING:**
-        *   Keep paragraphs short (2-3 sentences max).
-        *   Use extensive whitespace between sections.
-        *   **Bold** key concepts, entities, and important values for scannability.
-    
-    2.  **STRUCTURE:**
-        *   Use **H2 (##)** for major sections.
+    1.  **Structure & Headings:**
+        *   Use **H2 (##)** for main sections.
         *   Use **H3 (###)** for subsections.
-        *   Never use H1.
+        *   Avoid H1.
     
-    3.  **LISTS OVER WALLS OF TEXT:**
-        *   Whenever possible, use Bullet Points (-) or Numbered Lists (1.).
-        *   Use nested lists for detailed breakdowns.
+    2.  **Lists & Points:**
+        *   Use bullet points for lists to improve readability.
+        *   Use numbered lists for steps or priorities.
     
-    4.  **DATA PRESENTATION:**
-        *   Use **Markdown Tables** for comparisons, specs, or pros/cons.
-        *   Use \`Code Blocks\` for any technical commands or code.
-        *   Use > Blockquotes for summaries or important notes.
+    3.  **Emphasis:**
+        *   **Bold** key terms and important concepts.
     
-    5.  **TONE:**
-        *   Direct, professional, and helpful.
-        *   Avoid fluff. Get straight to the answer.`;
+    4.  **Code & Data:**
+        *   Use code blocks for snippets.
+        *   Use tables for structured data comparisons.
+    
+    5.  **Tone:**
+        *   Clear, concise, and helpful.
+        *   Use spacing effectively between sections.
+`;
 
 export const AGENTS: Agent[] = [
   {
