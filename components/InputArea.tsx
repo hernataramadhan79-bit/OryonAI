@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { SendHorizontal, Paperclip, Check, ScanLine, Mic, MicOff, Volume2, VolumeX, Trash2 } from 'lucide-react';
+import { SendHorizontal, Paperclip, Check, ScanLine, Mic, MicOff, Volume2, VolumeX, Trash2, Square } from 'lucide-react';
 import { LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 import { getThemeHex } from '../utils/themeUtils';
 
 interface InputAreaProps {
   onSend: (text: string, attachment?: { data: string; mimeType: string }) => void;
+  onStop: () => void;
   isLoading: boolean;
   isSidebarPinned: boolean;
   isSpeechEnabled: boolean;
@@ -16,6 +17,7 @@ interface InputAreaProps {
 
 const InputArea: React.FC<InputAreaProps> = ({ 
   onSend, 
+  onStop,
   isLoading, 
   isSidebarPinned,
   isSpeechEnabled,
@@ -236,19 +238,29 @@ const InputArea: React.FC<InputAreaProps> = ({
                 {isListening ? <MicOff size={20} /> : <Mic size={20} />}
                 </button>
 
-                <button
-                onClick={() => handleSubmit()}
-                disabled={(!input.trim() && !attachment) || isLoading}
-                className={`
-                    w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 relative group overflow-hidden
-                    ${(!input.trim() && !attachment) || isLoading 
-                    ? 'bg-white/5 text-gray-600 opacity-50 cursor-not-allowed' 
-                    : 'bg-white/10 hover:bg-white/20 active:scale-90'}
-                `}
-                style={(!input.trim() && !attachment) || isLoading ? {} : { color: hexColor, backgroundColor: `${hexColor}15` }}
-                >
-                <SendHorizontal size={20} className={(!input.trim() && !attachment) || isLoading ? '' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform'} />
-                </button>
+                {isLoading ? (
+                  <button
+                  onClick={onStop}
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-red-500/20 text-red-500 hover:bg-red-500/30 active:scale-90 border border-red-500/30"
+                  title="Stop Generation"
+                  >
+                  <Square size={16} fill="currentColor" />
+                  </button>
+                ) : (
+                  <button
+                  onClick={() => handleSubmit()}
+                  disabled={(!input.trim() && !attachment)}
+                  className={`
+                      w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 relative group overflow-hidden
+                      ${(!input.trim() && !attachment)
+                      ? 'bg-white/5 text-gray-600 opacity-50 cursor-not-allowed' 
+                      : 'bg-white/10 hover:bg-white/20 active:scale-90'}
+                  `}
+                  style={(!input.trim() && !attachment) ? {} : { color: hexColor, backgroundColor: `${hexColor}15` }}
+                  >
+                  <SendHorizontal size={20} className={(!input.trim() && !attachment) ? '' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform'} />
+                  </button>
+                )}
             </div>
           </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { GenerateContentResponse, Content, Part } from "@google/genai";
-import { Trash2, AlertCircle, LogOut, Menu, Cpu, Terminal, Briefcase } from 'lucide-react';
+import { Trash2, AlertCircle, LogOut, Menu, Cpu, Terminal, Briefcase, Download } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, User, Agent, LanguageCode } from './types';
 import { sendMessageStream, resetChat, initializeChat, getAgents } from './services/geminiService';
@@ -31,6 +31,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isMemoryLoaded, setIsMemoryLoaded] = useState(false);
+  const stopGenerationRef = useRef(false);
   
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
@@ -250,6 +251,7 @@ const App: React.FC = () => {
   };
 
   const handleChatFlow = async (text: string, aiMessageId: string, attachment?: { data: string; mimeType: string }) => {
+    stopGenerationRef.current = false;
     const initialAiMessage: Message = {
       id: aiMessageId,
       role: 'model',
@@ -294,6 +296,9 @@ const App: React.FC = () => {
     let accumulatedText = '';
 
     for await (const chunk of stream) {
+      if (stopGenerationRef.current) {
+          break;
+      }
       const chunkText = (chunk as GenerateContentResponse).text;
       if (chunkText) {
         accumulatedText += chunkText;
@@ -311,7 +316,9 @@ const App: React.FC = () => {
       )
     );
 
-    speakText(accumulatedText);
+    if (!stopGenerationRef.current) {
+        speakText(accumulatedText);
+    }
   };
 
   const handleSendMessage = async (text: string, attachment?: { data: string; mimeType: string }) => {
@@ -342,6 +349,46 @@ const App: React.FC = () => {
     }
   };
 
+  const handleStopGeneration = () => {
+    stopGenerationRef.current = true;
+    setIsLoading(false);
+  };
+
+  const handleRegenerate = async () => {
+    if (isLoading || messages.length === 0) return;
+    
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role === 'user') return; // Can't regenerate if last msg is user (should wait for bot)
+
+    // Find the last user message to resend
+    let lastUserMsgIndex = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === 'user') {
+            lastUserMsgIndex = i;
+            break;
+        }
+    }
+
+    if (lastUserMsgIndex === -1) return;
+
+    const lastUserMsg = messages[lastUserMsgIndex];
+    
+    // Remove all messages after the last user message (inclusive if we want to re-add it, or just keep it and clear bot response)
+    // Actually, typically we just remove the bot's failed/bad response and keep the user's message, then trigger send again.
+    
+    // Remove the bot response
+    setMessages(prev => prev.slice(0, lastUserMsgIndex + 1));
+    
+    setIsLoading(true);
+    try {
+        const aiMessageId = uuidv4();
+        await handleChatFlow(lastUserMsg.text, aiMessageId, lastUserMsg.attachment);
+    } catch (err: any) {
+        setError(err.message || t.errorGeneric);
+        setIsLoading(false);
+    }
+  };
+
   const handleClearChat = () => {
     if (!currentUser) return;
     window.speechSynthesis.cancel();
@@ -362,6 +409,23 @@ const App: React.FC = () => {
     }]);
     if (isSpeechEnabled) speakText(clearMsg);
     setError(null);
+  };
+
+  const handleExportChat = () => {
+    const chatContent = messages.map(m => {
+        const role = m.role === 'user' ? currentUser?.displayName.toUpperCase() : currentAgent.name.toUpperCase();
+        return `[${new Date(m.timestamp).toLocaleString()}] ${role}:\n${m.text}\n`;
+    }).join('\n-------------------\n\n');
+
+    const blob = new Blob([chatContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oryon-chat-${currentAgent.id}-${new Date().toISOString().slice(0,10)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const getHeaderIcon = (iconId: string) => {
@@ -450,13 +514,22 @@ const App: React.FC = () => {
 
           <div className="flex items-center gap-3 md:gap-4">
             {messages.length > 0 && (
-              <button
-                onClick={handleClearChat}
-                className="p-2 rounded-lg bg-white/5 text-gray-400 border border-white/10 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all active:scale-95"
-                title={t.clearChat}
-              >
-                <Trash2 size={16} />
-              </button>
+              <>
+                 <button
+                    onClick={handleExportChat}
+                    className="p-2 rounded-lg bg-white/5 text-gray-400 border border-white/10 hover:text-white hover:bg-white/10 transition-all active:scale-95"
+                    title="Export Chat"
+                 >
+                    <Download size={16} />
+                 </button>
+                 <button
+                    onClick={handleClearChat}
+                    className="p-2 rounded-lg bg-white/5 text-gray-400 border border-white/10 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all active:scale-95"
+                    title={t.clearChat}
+                 >
+                    <Trash2 size={16} />
+                 </button>
+              </>
             )}
 
             <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-gray-400">
@@ -480,11 +553,13 @@ const App: React.FC = () => {
 
         <main className="flex-grow overflow-y-auto overflow-x-hidden px-3 md:px-8 pt-24 pb-48 md:pb-32 custom-scrollbar flex flex-col items-center">
             <div className="w-full max-w-3xl">
-               {messages.map((msg) => (
+               {messages.map((msg, index) => (
                  <ChatMessage 
                    key={msg.id} 
                    message={msg} 
                    agentTheme={currentAgent.themeColor}
+                   isLast={index === messages.length - 1}
+                   onRegenerate={handleRegenerate}
                  />
                ))}
                
@@ -509,6 +584,7 @@ const App: React.FC = () => {
 
         <InputArea 
           onSend={handleSendMessage} 
+          onStop={handleStopGeneration}
           isLoading={isLoading}
           isSidebarPinned={isSidebarPinned}
           isSpeechEnabled={isSpeechEnabled}

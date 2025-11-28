@@ -2,13 +2,15 @@ import React, { useState, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message } from '../types';
-import { Bot, User, Copy, Check, FileCode } from 'lucide-react';
+import { Bot, User, Copy, Check, FileCode, RefreshCw } from 'lucide-react';
 import TypingIndicator from './TypingIndicator';
 import { getThemeHex } from '../utils/themeUtils';
 
 interface ChatMessageProps {
   message: Message;
   agentTheme?: string;
+  isLast?: boolean;
+  onRegenerate?: () => void;
 }
 
 // Optimization: Memoize CodeBlock to prevent re-renders on parent updates
@@ -107,7 +109,7 @@ const TableRenderer = ({ children, ...props }: any) => (
   </div>
 );
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, onRegenerate }) => {
   const isUser = message.role === 'user';
   const isImage = message.type === 'image';
   
@@ -260,6 +262,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
               </div>
             )}
           </div>
+
+          {/* Regenerate Button for Last Bot Message */}
+          {isLast && !isUser && !isThinking && !isStreaming && onRegenerate && (
+            <div className="flex items-center gap-2 mt-2 ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
+               <button 
+                 onClick={onRegenerate}
+                 className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-white transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10 border border-transparent hover:border-white/10"
+               >
+                 <RefreshCw size={10} />
+                 <span>Regenerate</span>
+               </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
