@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Pin, PinOff, Globe, Terminal, Briefcase, Cpu } from 'lucide-react';
+import { ChevronsLeft, Globe, Terminal, Briefcase, Cpu } from 'lucide-react';
 import { Agent, LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 
@@ -93,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Mobile Overlay / Backdrop - Integrated here for correct z-indexing and state sync */}
+      {/* Mobile Overlay / Backdrop - Click here to close sidebar */}
       <div 
         className={`
           md:hidden fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm 
@@ -128,15 +128,13 @@ const Sidebar: React.FC<SidebarProps> = ({
               NEURAL LINK
             </h2>
             
+            {/* Back Button (Replaces Pin Button) */}
             <button 
-              onClick={onPinToggle}
-              className={`
-                p-2 rounded-full transition-all duration-300 active:scale-90
-                ${isPinned ? 'bg-white/10 text-cyber-accent' : 'text-gray-500 hover:text-white hover:bg-white/5'}
-              `}
-              title={isPinned ? "Unpin Sidebar" : "Pin Sidebar"}
+              onClick={onClose}
+              className="p-2 rounded-full transition-all duration-300 active:scale-90 text-gray-500 hover:text-white hover:bg-white/5"
+              title="Close Menu"
             >
-              {isPinned ? <Pin size={18} className="fill-current" /> : <PinOff size={18} />}
+              <ChevronsLeft size={24} />
             </button>
           </div>
 
