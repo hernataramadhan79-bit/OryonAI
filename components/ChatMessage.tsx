@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message } from '../types';
-import { Bot, User, Download, Copy, Check } from 'lucide-react';
+import { Bot, User, Copy, Check, FileCode } from 'lucide-react';
 import TypingIndicator from './TypingIndicator';
 import { getThemeHex } from '../utils/themeUtils';
 
@@ -17,23 +17,54 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
   const [isCopied, setIsCopied] = useState(false);
   const codeString = String(children).replace(/\n$/, '');
 
+  // Detect filename in the first line if it looks like a comment
+  // Example matches: "// src/App.tsx", "# main.py", "<!-- index.html -->"
+  let fileName: string | null = null;
+  let displayCode = codeString;
+  
+  if (!inline) {
+    const lines = codeString.split('\n');
+    const firstLine = lines[0]?.trim() || '';
+    
+    // Regex to find comment-like structures containing a filename pattern (something.extension)
+    const fileNameMatch = firstLine.match(/^(?:\/\/|#|<!--|;)\s+([a-zA-Z0-9_\-\/.]+\.[a-zA-Z0-9]+)\s*(?:-->)?$/);
+    
+    if (fileNameMatch) {
+      fileName = fileNameMatch[1];
+      // Remove the filename comment line from the displayed code to avoid redundancy
+      displayCode = lines.slice(1).join('\n');
+    }
+  }
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(codeString);
+    navigator.clipboard.writeText(displayCode); // Copy only the code, not the filename comment if extracted
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
 
   if (!inline && match) {
     return (
-      <div className="my-4 rounded-lg overflow-hidden border border-white/10 bg-[#0d0d0d] shadow-md w-full max-w-full group">
-        {/* Header Language Label */}
-        <div className="bg-[#1a1a1a] px-3 py-1.5 flex items-center justify-between border-b border-white/5">
-          <span className="text-xs font-sans text-gray-400 font-medium">
-            {match[1]}
-          </span>
+      <div className="my-4 rounded-lg overflow-hidden border border-white/10 bg-[#0d0d0d] shadow-md w-full max-w-full group font-sans">
+        {/* Header - IDE Tab Style */}
+        <div className="bg-[#1a1a1a] px-3 py-2 flex items-center justify-between border-b border-white/5">
+          <div className="flex items-center gap-3">
+             {/* If filename detected, show it prominently like a tab */}
+             {fileName ? (
+                <div className="flex items-center gap-2 text-xs text-white font-medium bg-white/5 px-3 py-1 rounded-t-md border-t border-x border-white/10 -mb-[9px] relative z-10">
+                   <FileCode size={12} className="text-blue-400" />
+                   <span>{fileName}</span>
+                </div>
+             ) : (
+                <span className="text-xs font-mono text-gray-500 font-bold uppercase tracking-wider">
+                  {match[1]}
+                </span>
+             )}
+          </div>
+
           <button
             onClick={handleCopy}
             className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white transition-colors"
+            title="Copy Code"
           >
             {isCopied ? (
               <>
@@ -50,9 +81,9 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
         </div>
         
         {/* Code Area */}
-        <div className="p-3 overflow-x-auto custom-scrollbar">
-          <code className={className} {...props} style={{ fontSize: '13px', lineHeight: '1.5', fontFamily: 'monospace', whiteSpace: 'pre' }}>
-            {children}
+        <div className="p-4 overflow-x-auto custom-scrollbar bg-[#0d0d0d]">
+          <code className={className} {...props} style={{ fontSize: '13px', lineHeight: '1.6', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre' }}>
+            {displayCode}
           </code>
         </div>
       </div>
