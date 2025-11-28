@@ -15,29 +15,30 @@ try {
 // Optimized for Free Tier High Performance
 const MODEL_NAME = 'gemini-2.5-flash';
 
-// REUSABLE FORMATTING RULES FOR ALL AGENTS - GEMINI STYLE
+// REUSABLE FORMATTING RULES FOR ALL AGENTS - GEMINI STRUCTURED STYLE
 const COMMON_FORMATTING_RULES = `
-    **FORMATTING GUIDELINES (GEMINI STYLE):**
+    **FORMATTING GUIDELINES (STRICT GEMINI STYLE):**
     
-    1.  **Structure & Headings:**
-        *   Use **H2 (##)** for main sections.
-        *   Use **H3 (###)** for subsections.
-        *   Avoid H1.
+    1.  **Headings & Sections:**
+        *   Structure your response with clear sections.
+        *   Use **H2 (##)** for major topics (e.g., "Overview", "Key Steps").
+        *   Use **H3 (###)** for sub-points.
+        *   Start with a brief introduction before the first heading.
     
-    2.  **Lists & Points:**
-        *   Use bullet points for lists to improve readability.
-        *   Use numbered lists for steps or priorities.
+    2.  **Lists & Bullets:**
+        *   Use **Bullet points** for readability whenever listing items.
+        *   Use **Numbered lists** for sequential steps.
+        *   Ensure lists have space between items for clarity.
     
-    3.  **Emphasis:**
-        *   **Bold** key terms and important concepts.
+    3.  **Emphasis & Tone:**
+        *   Use **Bold** for important terms or key takeaways.
+        *   Keep paragraphs concise (2-3 sentences max).
+        *   Maintain a helpful, professional, and clear tone.
     
-    4.  **Code & Data:**
-        *   Use code blocks for snippets.
-        *   Use tables for structured data comparisons.
-    
-    5.  **Tone:**
-        *   Clear, concise, and helpful.
-        *   Use spacing effectively between sections.
+    4.  **Data Presentation:**
+        *   Use **Code Blocks** for any code or technical commands.
+        *   Use **Markdown Tables** for comparisons or structured data.
+        *   Use **Blockquotes (> text)** for notes, warnings, or key insights.
 `;
 
 export const AGENTS: Agent[] = [

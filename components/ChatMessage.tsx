@@ -61,7 +61,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
   // Inline Code
   return (
-    <code className="bg-white/10 px-1.5 py-0.5 rounded text-[13px] font-mono text-gray-100 border border-white/5" {...props}>
+    <code className="bg-white/10 px-1.5 py-0.5 rounded text-[13px] font-mono text-gray-100 border border-white/5 break-all" {...props}>
       {children}
     </code>
   );
@@ -69,7 +69,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
 // Custom Table Renderer to ensure scrolling on mobile
 const TableRenderer = ({ children, ...props }: any) => (
-  <div className="w-full my-5 overflow-x-auto rounded-lg border border-white/10">
+  <div className="w-full my-5 overflow-x-auto rounded-lg border border-white/10 shadow-sm bg-white/[0.02]">
     <table className="w-full border-collapse text-sm min-w-[500px]" {...props}>
       {children}
     </table>
@@ -128,7 +128,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
               borderColor: `${hexColor}40`
             } : {}}
             className={`
-            group relative px-4 md:px-5 py-3 md:py-4 text-[15px] leading-relaxed transition-all duration-500 max-w-full
+            group relative px-4 md:px-6 py-3 md:py-5 text-[15px] leading-relaxed transition-all duration-500 max-w-full
             ${isUser 
               ? 'bg-[#1e1e1e] text-gray-100 rounded-2xl rounded-tr-sm border border-white/10' 
               : `bg-transparent text-gray-100 rounded-none w-full`} 
@@ -171,40 +171,47 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme }) => {
                      ) : (
                        <div className="prose prose-invert prose-base max-w-none break-words
                          /* 
-                            GEMINI-LIKE TYPOGRAPHY 
-                            Refined for structure, clarity, and modern aesthetics.
+                            GEMINI-LIKE STRUCTURED TYPOGRAPHY 
+                            Clean, readable, hierarchically strict.
                          */
                          
                          /* Body Text */
                          prose-p:text-gray-300 prose-p:leading-7 prose-p:mb-4 last:prose-p:mb-0
                          
-                         /* Headings */
-                         prose-headings:text-gray-100 prose-headings:font-semibold prose-headings:scroll-mt-20
-                         prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-white/10
-                         prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2 prose-h3:text-[var(--agent-accent)]
+                         /* Headings - Distinct and structured */
+                         prose-headings:text-gray-100 prose-headings:font-medium prose-headings:scroll-mt-20
                          
-                         /* Lists */
-                         prose-ul:my-3 prose-ul:list-disc prose-ul:pl-5 prose-ul:text-gray-300 prose-ul:space-y-1
-                         prose-ol:my-3 prose-ol:list-decimal prose-ol:pl-5 prose-ol:text-gray-300 prose-ol:space-y-1
-                         [&_li::marker]:text-[var(--agent-accent)]
+                         /* H2 - Major Section */
+                         prose-h2:text-xl prose-h2:mt-7 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-white/10
+                         
+                         /* H3 - Subsection */
+                         prose-h3:text-lg prose-h3:mt-5 prose-h3:mb-2 prose-h3:text-[var(--agent-accent)] prose-h3:font-semibold
+                         
+                         /* Lists - Clean with breathing room */
+                         prose-ul:my-4 prose-ul:list-disc prose-ul:pl-4 prose-ul:text-gray-300 prose-ul:space-y-2
+                         prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-4 prose-ol:text-gray-300 prose-ol:space-y-2
+                         [&_li::marker]:text-[var(--agent-accent)] [&_li::marker]:font-bold
                          
                          /* Links */
-                         prose-a:text-[var(--agent-accent)] prose-a:no-underline hover:prose-a:underline prose-a:break-all
+                         prose-a:text-[var(--agent-accent)] prose-a:no-underline hover:prose-a:underline prose-a:break-all prose-a:font-medium
                          
-                         /* Tables are handled by Custom Component now for scrolling */
+                         /* Tables (Wrapper handled by Component) */
                          prose-thead:bg-white/5
                          prose-th:text-left prose-th:p-3 prose-th:text-gray-100 prose-th:font-semibold prose-th:border-b prose-th:border-r prose-th:border-white/10 last:prose-th:border-r-0
                          prose-td:p-3 prose-td:border-b prose-td:border-r prose-td:border-white/5 prose-td:text-gray-300 last:prose-td:border-r-0
                          prose-tr:hover:bg-white/[0.02]
                          
-                         /* Blockquotes */
-                         prose-blockquote:border-l-4 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/[0.02] prose-blockquote:pl-4 prose-blockquote:py-2 prose-blockquote:my-4 prose-blockquote:rounded-r prose-blockquote:text-gray-400 prose-blockquote:italic
+                         /* Blockquotes - Distinct Callout */
+                         prose-blockquote:border-l-4 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/[0.03] prose-blockquote:pl-4 prose-blockquote:py-3 prose-blockquote:my-5 prose-blockquote:rounded-r-lg prose-blockquote:text-gray-300 prose-blockquote:not-italic
                          
                          /* Strong/Bold */
                          prose-strong:text-white prose-strong:font-bold
                          
                          /* Horizontal Rule */
-                         prose-hr:border-white/10 prose-hr:my-6
+                         prose-hr:border-white/10 prose-hr:my-8
+                         
+                         /* Code Pre tag margin */
+                         prose-pre:my-4
                        ">
                          <ReactMarkdown 
                            remarkPlugins={[remarkGfm]}
