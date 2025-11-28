@@ -55,40 +55,46 @@ const App: React.FC = () => {
     return agentInstruction + getSystemLanguageInstruction(lang);
   };
 
-  // Load Memory (Multi-Agent)
+  // Load Memory (Multi-Agent) - ROBUST IMPLEMENTATION
   useEffect(() => {
     if (!currentUser) return;
 
-    const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
-    const savedData = localStorage.getItem(userStorageKey);
-    
-    if (savedData) {
+    // Async function to handle memory loading safely
+    const loadMemory = async () => {
       try {
-        const parsedStore: Record<string, Message[]> = JSON.parse(savedData);
-        setHistoryStore(parsedStore);
+        const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
+        const savedData = localStorage.getItem(userStorageKey);
         
-        const agentMessages = parsedStore[currentAgent.id] || [];
-        setMessages(agentMessages);
-        
-        initializeGeminiWithHistory(agentMessages, getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage));
-        
-        if (agentMessages.length === 0) {
-           setInitialWelcome(currentUser.displayName, currentAgent);
+        if (savedData) {
+          const parsedStore: Record<string, Message[]> = JSON.parse(savedData);
+          setHistoryStore(parsedStore);
+          
+          const agentMessages = parsedStore[currentAgent.id] || [];
+          setMessages(agentMessages);
+          
+          initializeGeminiWithHistory(agentMessages, getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage));
+          
+          if (agentMessages.length === 0) {
+             setInitialWelcome(currentUser.displayName, currentAgent);
+          }
+        } else {
+          setInitialWelcome(currentUser.displayName, currentAgent);
         }
-
       } catch (e) {
         console.error("Failed to load memory", e);
+        // Fallback if memory load fails
         setInitialWelcome(currentUser.displayName, currentAgent);
+      } finally {
+        // CRITICAL: Always unblock the UI after a short delay for smoothness
+        setTimeout(() => {
+          setIsMemoryLoaded(true);
+        }, 800);
       }
-    } else {
-      setInitialWelcome(currentUser.displayName, currentAgent);
-    }
+    };
+
+    loadMemory();
     
-    // Add small delay to smooth out the transition from login to chat
-    setTimeout(() => {
-      setIsMemoryLoaded(true);
-    }, 800);
-  }, [currentUser]); 
+  }, [currentUser]); // Depend ONLY on currentUser to prevent re-loops
 
   // Update system instruction when language changes
   useEffect(() => {
@@ -439,13 +445,16 @@ const App: React.FC = () => {
   }
 
   // FIX: Glitch Prevention. 
-  // Instead of returning null (white screen), return a dark loading state that matches the theme.
+  // Return a stable dark loading screen.
   if (!isMemoryLoaded) {
     return (
-      <div className="min-h-screen bg-cyber-black flex items-center justify-center">
-        <div className="relative">
-           <div className="w-12 h-12 rounded-full border-2 border-cyber-accent border-t-transparent animate-spin"></div>
-           <div className="absolute inset-0 bg-cyber-accent/20 blur-xl animate-pulse"></div>
+      <div className="min-h-screen bg-cyber-black flex items-center justify-center animate-fade-in-up">
+        <div className="relative flex flex-col items-center gap-4">
+           <div className="relative">
+             <div className="w-16 h-16 rounded-full border-2 border-cyber-accent/20 border-t-cyber-accent animate-spin"></div>
+             <div className="absolute inset-0 bg-cyber-accent/10 blur-xl animate-pulse"></div>
+           </div>
+           <span className="text-cyber-accent font-mono text-xs tracking-[0.3em] animate-pulse">INITIALIZING</span>
         </div>
       </div>
     );
