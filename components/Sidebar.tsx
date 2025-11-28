@@ -94,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       onMouseEnter={onHoverStart}
       onMouseLeave={onHoverEnd}
       className={`
-        fixed top-0 left-0 h-full z-50 
+        fixed top-0 left-0 h-full z-[60] 
         w-[85vw] max-w-[320px] md:w-80
         bg-cyber-black/95 backdrop-blur-2xl border-r border-white/5
         shadow-[20px_0_50px_rgba(0,0,0,0.3)] 

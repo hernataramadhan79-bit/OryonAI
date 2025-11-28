@@ -441,7 +441,7 @@ const App: React.FC = () => {
 
       {/* Overlay backdrop for mobile when sidebar is open */}
       <div 
-        className={`md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        className={`md:hidden fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => { setIsSidebarPinned(false); setIsSidebarHovered(false); }}
       ></div>
 
