@@ -33,6 +33,8 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Memory Loaded Flag - Defaults to FALSE to show loader first
   const [isMemoryLoaded, setIsMemoryLoaded] = useState(false);
   
   // Agent State
@@ -44,7 +46,6 @@ const App: React.FC = () => {
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
 
   // Responsive Sidebar Logic
-  // isOpen: Controls Visibility (Slide in/out) -> Includes Hover
   const isSidebarOpen = isSidebarPinned || isSidebarHovered;
   
   // Translations
@@ -57,7 +58,12 @@ const App: React.FC = () => {
 
   // Load Memory (Multi-Agent) - ROBUST IMPLEMENTATION
   useEffect(() => {
-    if (!currentUser) return;
+    let isMounted = true;
+
+    if (!currentUser) {
+      setIsMemoryLoaded(false);
+      return;
+    }
 
     // Async function to handle memory loading safely
     const loadMemory = async () => {
@@ -65,6 +71,11 @@ const App: React.FC = () => {
         const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
         const savedData = localStorage.getItem(userStorageKey);
         
+        // Artificial small delay to allow UI transition to settle
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        if (!isMounted) return;
+
         if (savedData) {
           const parsedStore: Record<string, Message[]> = JSON.parse(savedData);
           setHistoryStore(parsedStore);
@@ -82,17 +93,21 @@ const App: React.FC = () => {
         }
       } catch (e) {
         console.error("Failed to load memory", e);
-        // Fallback if memory load fails
-        setInitialWelcome(currentUser.displayName, currentAgent);
+        if (isMounted) setInitialWelcome(currentUser.displayName, currentAgent);
       } finally {
-        // CRITICAL: Always unblock the UI after a short delay for smoothness
-        setTimeout(() => {
+        if (isMounted) {
           setIsMemoryLoaded(true);
-        }, 800);
+        }
       }
     };
 
+    // Reset memory loaded state when user changes to force re-init
+    setIsMemoryLoaded(false);
     loadMemory();
+
+    return () => {
+      isMounted = false;
+    };
     
   }, [currentUser]); // Depend ONLY on currentUser to prevent re-loops
 
@@ -160,7 +175,6 @@ const App: React.FC = () => {
   const speakText = (text: string) => {
     if (!isSpeechEnabled || !window.speechSynthesis) return;
     
-    // Cancel previous speech
     window.speechSynthesis.cancel();
 
     // Clean text for speech (remove markdown symbols roughly)
@@ -175,7 +189,6 @@ const App: React.FC = () => {
     const langDef = SUPPORTED_LANGUAGES.find(l => l.code === currentLanguage);
     const targetVoiceCode = langDef?.voiceCode || 'en-US';
 
-    // Try to find exact match first (e.g. id-ID), then language match (e.g. id), then fallback to Google US
     const preferredVoice = 
       voices.find(v => v.lang === targetVoiceCode) || 
       voices.find(v => v.lang.startsWith(currentLanguage)) || 
@@ -204,7 +217,6 @@ const App: React.FC = () => {
     setMessages([welcomeMsg]);
     initializeChat([], getFullSystemInstruction(agent.systemInstruction, currentLanguage));
     
-    // Optionally speak welcome message if enabled (default off though)
     if (isSpeechEnabled) speakText(welcomeText);
   };
 
@@ -218,6 +230,8 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
+    // Explicitly resetting memory loaded state to force the loading UI
+    setIsMemoryLoaded(false);
     if (user.language) {
       setCurrentLanguage(user.language);
     }
@@ -332,13 +346,12 @@ const App: React.FC = () => {
       )
     );
 
-    // Speak the final text
     speakText(accumulatedText);
   };
 
   const handleSendMessage = async (text: string, attachment?: { data: string; mimeType: string }) => {
     setError(null);
-    window.speechSynthesis.cancel(); // Stop any current speaking
+    window.speechSynthesis.cancel();
     
     const userMessage: Message = {
       id: uuidv4(),
@@ -354,8 +367,6 @@ const App: React.FC = () => {
 
     try {
       const aiMessageId = uuidv4();
-      
-      // Removed Analyze Intent & Draw Logic for Optimization
       await handleChatFlow(text, aiMessageId, attachment);
 
     } catch (err: any) {
@@ -393,7 +404,6 @@ const App: React.FC = () => {
     setError(null);
   };
 
-  // Helper for dynamic header icon
   const getHeaderIcon = (iconId: string) => {
     const className = `w-6 h-6 relative z-10 transition-colors duration-500 ${currentAgent.themeColor}`;
     switch (iconId) {
@@ -424,7 +434,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-cyber-black text-gray-200 overflow-hidden selection:bg-cyber-accent selection:text-black transition-colors duration-500">
+    // Add Key to force remount on user change to prevent UI state staleness
+    <div key={currentUser.username} className="min-h-screen flex flex-col font-sans bg-cyber-black text-gray-200 overflow-hidden selection:bg-cyber-accent selection:text-black transition-colors duration-500">
       
       <Sidebar 
         isOpen={isSidebarOpen} 
@@ -439,7 +450,7 @@ const App: React.FC = () => {
         onLanguageChange={setCurrentLanguage}
       />
 
-      {/* Overlay backdrop for mobile when sidebar is open */}
+      {/* Overlay backdrop for mobile when sidebar is open - High Z-Index to cover Input */}
       <div 
         className={`md:hidden fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => { setIsSidebarPinned(false); setIsSidebarHovered(false); }}
@@ -492,7 +503,7 @@ const App: React.FC = () => {
           {/* Right Actions */}
           <div className="flex items-center gap-3 md:gap-4">
             
-            {/* Clear Chat Button (Moved from floating) */}
+            {/* Clear Chat Button */}
             {messages.length > 0 && (
               <button
                 onClick={handleClearChat}

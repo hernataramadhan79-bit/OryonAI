@@ -43,8 +43,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     setError(null);
     setLoading(true);
 
-    // Artificial delay for realism
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Reduced artificial delay for snappier UX
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     try {
       let user;
@@ -65,7 +65,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
   const handleGuestLogin = async () => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 600)); 
+    await new Promise(resolve => setTimeout(resolve, 300)); 
     const user = loginAsGuest();
     user.language = 'en';
     onLoginSuccess(user);
