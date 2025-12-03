@@ -552,7 +552,7 @@ const App: React.FC = () => {
         </header>
 
         <main className="flex-grow overflow-y-auto overflow-x-hidden px-3 md:px-8 pt-24 pb-48 md:pb-32 custom-scrollbar flex flex-col items-center">
-            <div className="w-full max-w-3xl">
+            <div className="w-full max-w-5xl">
                {messages.map((msg, index) => (
                  <ChatMessage 
                    key={msg.id} 

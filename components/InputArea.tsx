@@ -151,7 +151,7 @@ const InputArea: React.FC<InputAreaProps> = ({
       `}
     >
       {/* Input Container Wrapper for Floating Effect - Pointer events auto to re-enable interaction */}
-      <div className="relative w-full max-w-3xl mx-auto px-4 md:px-4 pointer-events-auto">
+      <div className="relative w-full max-w-5xl mx-auto px-4 md:px-4 pointer-events-auto">
           
           {/* Attachment Preview */}
           {attachment && (
