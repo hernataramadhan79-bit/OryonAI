@@ -62,12 +62,12 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
         
         {/* Header - IDE Tab Style */}
         <div className="bg-[#1a1a1a] px-3 py-2 flex items-center justify-between border-b border-white/5 flex-shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 overflow-hidden">
              {/* Filename Tab */}
              {fileName ? (
-                <div className="flex items-center gap-2 text-xs text-white font-medium bg-white/5 px-3 py-1 rounded-t-md border-t border-x border-white/10 -mb-[9px] relative z-10">
-                   <FileCode size={12} className="text-blue-400" />
-                   <span>{fileName}</span>
+                <div className="flex items-center gap-2 text-xs text-white font-medium bg-white/5 px-3 py-1 rounded-t-md border-t border-x border-white/10 -mb-[9px] relative z-10 truncate max-w-[150px]">
+                   <FileCode size={12} className="text-blue-400 flex-shrink-0" />
+                   <span className="truncate">{fileName}</span>
                 </div>
              ) : (
                 <span className="text-xs font-mono text-gray-500 font-bold uppercase tracking-wider">
@@ -76,7 +76,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
              )}
           </div>
 
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
              {/* Web Builder Controls */}
              {isHTML && (
                <>
@@ -180,7 +180,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
   // Inline Code
   return (
-    <code className="bg-white/10 text-cyber-accent rounded px-1.5 py-0.5 text-sm font-mono" {...props}>
+    <code className="bg-white/10 text-cyber-accent rounded px-1.5 py-0.5 text-sm font-mono break-all" {...props}>
       {children}
     </code>
   );
@@ -212,7 +212,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, 
           {isBot ? <Bot size={18} className="md:w-5 md:h-5" /> : <User size={18} className="md:w-5 md:h-5" />}
         </div>
 
-        {/* Message Content */}
+        {/* Content Column - Added min-w-0 to fix flex overflow issues */}
         <div className={`flex flex-col gap-2 min-w-0 ${isBot ? 'items-start' : 'items-end'}`}>
           <div className="flex items-center gap-2 opacity-50 text-[10px] md:text-xs font-mono mb-1">
              <span>{isBot ? 'ORYON' : 'USER'}</span>
@@ -222,7 +222,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, 
 
           <div 
             className={`
-              relative px-4 py-3 md:px-6 md:py-5 rounded-2xl md:rounded-3xl backdrop-blur-md border shadow-md overflow-hidden text-sm md:text-[15px] leading-relaxed
+              relative px-4 py-3 md:px-6 md:py-5 rounded-2xl md:rounded-3xl backdrop-blur-md border shadow-md overflow-hidden text-sm md:text-[15px] leading-relaxed max-w-full
               ${isBot 
                 ? 'bg-black/30 border-white/5 text-gray-200 rounded-tl-sm' 
                 : 'bg-white/10 border-white/10 text-white rounded-tr-sm'}
@@ -258,7 +258,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, 
             {isBot && message.isStreaming && !message.text ? (
               <TypingIndicator themeColor={agentTheme} />
             ) : (
-              <div className={`prose prose-invert max-w-none break-words
+              <div className={`prose prose-invert w-full min-w-0 max-w-none break-words whitespace-pre-wrap
                  prose-p:leading-7 prose-p:my-3 
                  prose-headings:font-mono prose-headings:font-bold prose-headings:tracking-tight prose-headings:mt-6 prose-headings:mb-4
                  prose-h2:text-xl prose-h2:border-b prose-h2:border-white/10 prose-h2:pb-2 prose-h2:text-[var(--agent-accent)]
@@ -267,7 +267,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, 
                  prose-ul:my-4 prose-ul:pl-6 prose-ul:space-y-2 prose-li:marker:text-[var(--agent-accent)]
                  prose-ol:my-4 prose-ol:pl-6 prose-ol:space-y-2 prose-ol:marker:text-[var(--agent-accent)]
                  prose-blockquote:border-l-4 prose-blockquote:border-[var(--agent-accent)] prose-blockquote:bg-white/5 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:italic prose-blockquote:text-gray-400
-                 prose-a:text-[var(--agent-accent)] prose-a:no-underline hover:prose-a:underline
+                 prose-a:text-[var(--agent-accent)] prose-a:no-underline hover:prose-a:underline prose-a:break-all
                  prose-table:w-full prose-table:border-collapse prose-table:my-6 prose-table:rounded-lg prose-table:overflow-hidden prose-table:border prose-table:border-white/10
                  prose-thead:bg-white/5 prose-thead:text-xs prose-thead:uppercase prose-thead:tracking-wider prose-thead:text-[var(--agent-accent)]
                  prose-th:p-3 prose-th:text-left prose-th:font-bold prose-th:border-b prose-th:border-white/10
