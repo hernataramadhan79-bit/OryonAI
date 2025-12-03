@@ -176,7 +176,13 @@ const App: React.FC = () => {
        };
        
        const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
-       localStorage.setItem(userStorageKey, JSON.stringify(updatedStore));
+       try {
+          localStorage.setItem(userStorageKey, JSON.stringify(updatedStore));
+       } catch (e) {
+          // STORAGE QUOTA SAFEGUARD
+          console.error("LocalStorage full!", e);
+          setError("Storage quota exceeded. Please clear chat or export.");
+       }
        setHistoryStore(updatedStore);
     }
   }, [messages, currentUser, isMemoryLoaded, currentAgent.id]);
@@ -287,7 +293,11 @@ const App: React.FC = () => {
     };
     setHistoryStore(updatedStore); 
     if (currentUser) {
-        localStorage.setItem(`oryon_multi_agent_memory_${currentUser.username}`, JSON.stringify(updatedStore));
+        try {
+          localStorage.setItem(`oryon_multi_agent_memory_${currentUser.username}`, JSON.stringify(updatedStore));
+        } catch (e) {
+          setError("Storage full. Chat not saved.");
+        }
     }
 
     const nextMessages = updatedStore[newAgent.id] || [];
@@ -438,6 +448,25 @@ const App: React.FC = () => {
         setError(err.message || t.errorGeneric);
         setIsLoading(false);
     }
+  };
+
+  const handleEditMessage = async (messageId: string, newText: string) => {
+     if (isLoading) return;
+     
+     // Find the index of the edited message
+     const msgIndex = messages.findIndex(m => m.id === messageId);
+     if (msgIndex === -1) return;
+
+     // Slice history up to that message (remove everything after)
+     // BUT, we want to replace the old user message with the new one
+     const historyUpToEdit = messages.slice(0, msgIndex);
+     
+     // Update state to remove old future
+     setMessages(historyUpToEdit);
+     
+     // Trigger send with new text
+     // We treat it as a new send command but logically it feels like "editing and restarting"
+     await handleSendMessage(newText, messages[msgIndex].attachment);
   };
 
   const handleClearChat = () => {
@@ -617,6 +646,7 @@ const App: React.FC = () => {
                    agentTheme={currentAgent.themeColor}
                    isLast={index === messages.length - 1}
                    onRegenerate={handleRegenerate}
+                   onEdit={handleEditMessage}
                  />
                ))}
                

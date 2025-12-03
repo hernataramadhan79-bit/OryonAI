@@ -1,9 +1,9 @@
-import React, { useState, memo, useEffect } from 'react';
+import React, { useState, memo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message } from '../types';
-import { Bot, User, Copy, Check, FileCode, RefreshCw, Eye, Code, Maximize2, Minimize2, Edit, Save, X, Globe } from 'lucide-react';
+import { Bot, User, Copy, Check, FileCode, RefreshCw, Eye, Code, Maximize2, Minimize2, Edit, Save, X, Globe, ExternalLink, Pencil } from 'lucide-react';
 import TypingIndicator from './TypingIndicator';
 import { getThemeHex } from '../utils/themeUtils';
 
@@ -12,6 +12,7 @@ interface ChatMessageProps {
   agentTheme?: string;
   isLast?: boolean;
   onRegenerate?: () => void;
+  onEdit?: (messageId: string, newText: string) => void;
 }
 
 // Optimization: Memoize CodeBlock to prevent re-renders on parent updates
@@ -37,15 +38,16 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
   // Logic to strip filename for display/execution if needed
   if (!inline) {
     const lines = currentCode.split('\n');
-    const firstLine = lines[0]?.trim() || '';
-    const fileNameMatch = firstLine.match(/^(?:\/\/|#|<!--|;)\s+([a-zA-Z0-9_\-\/.]+\.[a-zA-Z0-9]+)\s*(?:-->)?$/);
+    // Regex improved to handle whitespace and case insensitivity
+    const firstLine = lines.find(line => line.trim().length > 0) || '';
+    const fileNameMatch = firstLine.match(/^(?:\/\/|#|<!--|;)\s*([a-zA-Z0-9_\-\/.]+\.[a-zA-Z0-9]+)\s*(?:-->)?$/i);
     
     if (fileNameMatch) {
       fileName = fileNameMatch[1];
     }
   }
 
-  const isHTML = !inline && match && (match[1] === 'html' || match[1] === 'xml') && (fileName?.endsWith('.html') || currentCode.includes('<html'));
+  const isHTML = !inline && match && (match[1] === 'html' || match[1] === 'xml') && (fileName?.endsWith('.html') || currentCode.includes('<html') || currentCode.includes('<!DOCTYPE html>'));
 
   const handleCopy = () => {
     navigator.clipboard.writeText(currentCode);
@@ -55,6 +57,12 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setCurrentCode(e.target.value);
+  };
+  
+  const openInNewTab = () => {
+    const blob = new Blob([currentCode], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   };
 
   if (!inline && match) {
@@ -102,6 +110,17 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
                      </>
                    )}
                  </button>
+                 
+                 {/* Open New Tab (Only in Preview) */}
+                 {showPreview && (
+                    <button
+                        onClick={openInNewTab}
+                        className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded transition-colors text-gray-400 hover:text-white"
+                        title="Open in New Tab"
+                    >
+                        <ExternalLink size={12} />
+                    </button>
+                 )}
 
                  {/* Full Screen Toggle (Only in Preview) */}
                  {showPreview && (
@@ -162,12 +181,21 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
                         <span className="text-white font-mono text-sm font-bold tracking-wider">{fileName || 'Web Preview'}</span>
                         <span className="text-[10px] text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">LIVE</span>
                       </div>
-                      <button 
-                        onClick={() => setIsFullScreen(false)}
-                        className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
-                      >
-                        <X size={20} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                          <button 
+                            onClick={openInNewTab}
+                            className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+                            title="Open in new tab"
+                          >
+                            <ExternalLink size={20} />
+                          </button>
+                          <button 
+                            onClick={() => setIsFullScreen(false)}
+                            className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+                          >
+                            <Minimize2 size={20} />
+                          </button>
+                      </div>
                    </div>
                    <div className="flex-grow w-full h-full bg-white relative">
                       <iframe 
@@ -233,9 +261,20 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
   );
 });
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, onRegenerate }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, onRegenerate, onEdit }) => {
   const isBot = message.role === 'model';
   const hexColor = getThemeHex(agentTheme);
+  const [isEditingMessage, setIsEditingMessage] = useState(false);
+  const [editedText, setEditedText] = useState(message.text);
+
+  const handleEditSubmit = () => {
+    if (onEdit && editedText.trim() !== message.text) {
+        onEdit(message.id, editedText);
+        setIsEditingMessage(false);
+    } else {
+        setIsEditingMessage(false);
+    }
+  };
 
   // Set CSS variables for this message
   const style = {
@@ -260,7 +299,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, 
         </div>
 
         {/* Content Column - Added min-w-0 to fix flex overflow issues */}
-        <div className={`flex flex-col gap-2 min-w-0 ${isBot ? 'items-start' : 'items-end'}`}>
+        <div className={`flex flex-col gap-2 min-w-0 ${isBot ? 'items-start' : 'items-end'} w-full`}>
           <div className="flex items-center gap-2 opacity-50 text-[10px] md:text-xs font-mono mb-1">
              <span>{isBot ? 'ORYON' : 'USER'}</span>
              <span>•</span>
@@ -304,6 +343,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, 
             {/* Text Content */}
             {isBot && message.isStreaming && !message.text ? (
               <TypingIndicator themeColor={agentTheme} />
+            ) : isEditingMessage ? (
+              <div className="w-full min-w-[200px] md:min-w-[400px]">
+                 <textarea 
+                    value={editedText}
+                    onChange={(e) => setEditedText(e.target.value)}
+                    className="w-full bg-black/30 text-white p-3 rounded-xl border border-white/20 focus:border-cyber-accent focus:outline-none font-sans text-sm mb-2 resize-none"
+                    rows={Math.max(3, editedText.split('\n').length)}
+                 />
+                 <div className="flex gap-2 justify-end">
+                    <button onClick={() => setIsEditingMessage(false)} className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/10 text-gray-300">Cancel</button>
+                    <button onClick={handleEditSubmit} className="px-3 py-1.5 rounded-lg text-xs bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30 hover:bg-cyber-accent/30">Save & Regenerate</button>
+                 </div>
+              </div>
             ) : (
               <div className={`prose prose-invert w-full min-w-0 max-w-none break-words whitespace-pre-wrap
                  prose-p:leading-7 prose-p:my-3 
@@ -339,16 +391,30 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, agentTheme, isLast, 
             )}
           </div>
 
-          {/* Regenerate Button (Only for last message if it's from bot and not streaming) */}
-          {isLast && isBot && !message.isStreaming && onRegenerate && (
-              <button 
-                onClick={onRegenerate}
-                className="self-start mt-1 flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-white transition-colors px-2 py-1 rounded bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10"
-              >
-                  <RefreshCw size={10} />
-                  <span>Regenerate</span>
-              </button>
-          )}
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 self-start mt-1">
+             {/* Regenerate (Last Bot Msg) */}
+             {isLast && isBot && !message.isStreaming && onRegenerate && (
+                <button 
+                  onClick={onRegenerate}
+                  className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-white transition-colors px-2 py-1 rounded bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10"
+                >
+                    <RefreshCw size={10} />
+                    <span>Regenerate</span>
+                </button>
+             )}
+
+             {/* Edit (User Msg) */}
+             {!isBot && onEdit && (
+                <button 
+                  onClick={() => setIsEditingMessage(true)}
+                  className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-white transition-colors px-2 py-1 rounded bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                >
+                    <Pencil size={10} />
+                    <span>Edit</span>
+                </button>
+             )}
+          </div>
         </div>
       </div>
     </div>
