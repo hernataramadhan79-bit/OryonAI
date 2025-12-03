@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { GenerateContentResponse, Content, Part } from "@google/genai";
-import { Trash2, AlertCircle, LogOut, Menu, Cpu, Terminal, Briefcase, Download } from 'lucide-react';
+import { Trash2, AlertCircle, LogOut, Menu, Cpu, Terminal, Briefcase, Download, ArrowDown } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, User, Agent, LanguageCode } from './types';
 import { sendMessageStream, resetChat, initializeChat, getAgents } from './services/geminiService';
@@ -29,7 +29,12 @@ const App: React.FC = () => {
   const [historyStore, setHistoryStore] = useState<Record<string, Message[]>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Refs for scrolling
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const mainContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
   const [isMemoryLoaded, setIsMemoryLoaded] = useState(false);
   const stopGenerationRef = useRef(false);
   
@@ -44,19 +49,23 @@ const App: React.FC = () => {
     // When agents list updates (due to lang change), find the current agent by ID in the new list
     const updatedAgent = agents.find(a => a.id === currentAgent.id) || agents[0];
     setCurrentAgent(updatedAgent);
-  }, [agents]); // Dependency on 'agents' which depends on 'currentLanguage'
+  }, [agents]); 
 
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
   const isSidebarOpen = isSidebarPinned || isSidebarHovered;
   const t = getTranslation(currentLanguage);
 
-  // Helper to combine agent instruction with language instruction
   const getFullSystemInstruction = (agentInstruction: string, lang: LanguageCode) => {
     return agentInstruction + getSystemLanguageInstruction(lang);
   };
 
+  // --- MEMORY LOADING & WATCHDOG ---
+
+  // 1. Primary Loading Logic
   useEffect(() => {
     let isMounted = true;
+    
+    // If no user, reset memory state
     if (!currentUser) {
       setIsMemoryLoaded(false);
       return;
@@ -67,20 +76,26 @@ const App: React.FC = () => {
         const userStorageKey = `oryon_multi_agent_memory_${currentUser.username}`;
         const savedData = localStorage.getItem(userStorageKey);
         
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Small delay for smooth transition (optional, kept small)
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         if (!isMounted) return;
 
         if (savedData) {
-          const parsedStore: Record<string, Message[]> = JSON.parse(savedData);
-          setHistoryStore(parsedStore);
-          
-          const agentMessages = parsedStore[currentAgent.id] || [];
-          setMessages(agentMessages);
-          
-          initializeGeminiWithHistory(agentMessages, getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage));
-          
-          if (agentMessages.length === 0) {
+          try {
+            const parsedStore: Record<string, Message[]> = JSON.parse(savedData);
+            setHistoryStore(parsedStore);
+            
+            const agentMessages = parsedStore[currentAgent.id] || [];
+            setMessages(agentMessages);
+            
+            initializeGeminiWithHistory(agentMessages, getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage));
+            
+            if (agentMessages.length === 0) {
+               setInitialWelcome(currentUser.displayName, currentAgent);
+            }
+          } catch (parseError) {
+             console.error("Memory corrupted, resetting", parseError);
              setInitialWelcome(currentUser.displayName, currentAgent);
           }
         } else {
@@ -104,12 +119,24 @@ const App: React.FC = () => {
     };
   }, [currentUser]); 
 
+  // 2. Watchdog / Failsafe
+  // Forces the app to open if loading gets stuck for more than 2.5 seconds
+  useEffect(() => {
+    if (currentUser && !isMemoryLoaded) {
+      const timeoutId = setTimeout(() => {
+        console.warn("Memory loading watchdog triggered. Forcing app open.");
+        setIsMemoryLoaded(true);
+      }, 2500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentUser, isMemoryLoaded]);
+
+
   useEffect(() => {
     if (isMemoryLoaded && messages.length > 0) {
-      // Re-initialize chat with new language instruction AND new agent instruction
       initializeGeminiWithHistory(messages, getFullSystemInstruction(currentAgent.systemInstruction, currentLanguage));
     }
-  }, [currentLanguage, currentAgent]); // Re-init if language or agent (translated) changes
+  }, [currentLanguage, currentAgent]);
 
   const initializeGeminiWithHistory = (msgs: Message[], instruction: string) => {
     resetChat(); 
@@ -194,13 +221,43 @@ const App: React.FC = () => {
     if (isSpeechEnabled) speakText(welcomeText);
   };
 
+  // --- SCROLL LOGIC ---
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollButton(false);
   };
 
+  // Auto-scroll logic: Only auto-scroll if user is already near bottom or it's a new user message
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    
+    // Always scroll on user message
+    if (lastMsg.role === 'user') {
+      scrollToBottom();
+      return;
+    }
+
+    // For bot messages (streaming), only scroll if we are near the bottom
+    if (mainContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = mainContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+      
+      if (isNearBottom) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   }, [messages]);
+
+  const handleScroll = () => {
+    if (mainContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = mainContainerRef.current;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      // Show button if we are more than 300px away from bottom
+      setShowScrollButton(distanceFromBottom > 300);
+    }
+  };
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
@@ -358,9 +415,8 @@ const App: React.FC = () => {
     if (isLoading || messages.length === 0) return;
     
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg.role === 'user') return; // Can't regenerate if last msg is user (should wait for bot)
+    if (lastMsg.role === 'user') return; 
 
-    // Find the last user message to resend
     let lastUserMsgIndex = -1;
     for (let i = messages.length - 1; i >= 0; i--) {
         if (messages[i].role === 'user') {
@@ -372,11 +428,6 @@ const App: React.FC = () => {
     if (lastUserMsgIndex === -1) return;
 
     const lastUserMsg = messages[lastUserMsgIndex];
-    
-    // Remove all messages after the last user message (inclusive if we want to re-add it, or just keep it and clear bot response)
-    // Actually, typically we just remove the bot's failed/bad response and keep the user's message, then trigger send again.
-    
-    // Remove the bot response
     setMessages(prev => prev.slice(0, lastUserMsgIndex + 1));
     
     setIsLoading(true);
@@ -469,9 +520,11 @@ const App: React.FC = () => {
         onSelectAgent={handleAgentChange}
         currentLanguage={currentLanguage}
         onLanguageChange={setCurrentLanguage}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onClearChat={handleClearChat}
+        onExportChat={handleExportChat}
       />
-
-      {/* External Overlay removed; managed internally by Sidebar now */}
 
       <div 
         className={`flex-grow flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] relative
@@ -512,7 +565,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 md:gap-4">
+          <div className="hidden md:flex items-center gap-3 md:gap-4">
             {messages.length > 0 && (
               <>
                  <button
@@ -532,7 +585,7 @@ const App: React.FC = () => {
               </>
             )}
 
-            <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-gray-400">
+            <div className="flex items-center gap-2 text-[10px] font-mono text-gray-400">
                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                <span className="tracking-widest">{currentUser.username.toUpperCase()}</span>
             </div>
@@ -551,7 +604,11 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-grow overflow-y-auto overflow-x-hidden px-3 md:px-8 pt-24 pb-48 md:pb-32 custom-scrollbar flex flex-col items-center">
+        <main 
+          ref={mainContainerRef}
+          onScroll={handleScroll}
+          className="flex-grow overflow-y-auto overflow-x-hidden px-3 md:px-8 pt-24 pb-48 md:pb-32 custom-scrollbar flex flex-col items-center"
+        >
             <div className="w-full max-w-5xl">
                {messages.map((msg, index) => (
                  <ChatMessage 
@@ -581,6 +638,21 @@ const App: React.FC = () => {
                <div ref={messagesEndRef} />
             </div>
         </main>
+        
+        {/* Scroll To Bottom Button */}
+        {showScrollButton && (
+          <div className={`
+             fixed bottom-24 md:bottom-28 right-6 md:right-[calc(50%-2.5rem)] z-40 animate-fade-in-up
+             ${isSidebarPinned ? 'md:right-[calc(40%-2rem)]' : ''}
+          `}>
+            <button 
+              onClick={scrollToBottom}
+              className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all active:scale-95"
+            >
+              <ArrowDown size={20} className="animate-bounce" />
+            </button>
+          </div>
+        )}
 
         <InputArea 
           onSend={handleSendMessage} 

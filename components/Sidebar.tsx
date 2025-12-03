@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
-import { ChevronsLeft, Globe, Terminal, Briefcase, Cpu } from 'lucide-react';
-import { Agent, LanguageCode } from '../types';
+import { ChevronsLeft, Globe, Terminal, Briefcase, Cpu, LogOut, Trash2, Download, User } from 'lucide-react';
+import { Agent, LanguageCode, User as UserType } from '../types';
 import { SUPPORTED_LANGUAGES, getTranslation } from '../utils/translations';
 
 interface SidebarProps {
@@ -9,12 +9,17 @@ interface SidebarProps {
   onPinToggle: () => void;
   onHoverStart: () => void;
   onHoverEnd: () => void;
-  onClose: () => void; // Added for explicit mobile close action
+  onClose: () => void;
   agents: Agent[];
   currentAgent: Agent;
   onSelectAgent: (agent: Agent) => void;
   currentLanguage: LanguageCode;
   onLanguageChange: (lang: LanguageCode) => void;
+  // New props for mobile actions
+  currentUser: UserType | null;
+  onLogout: () => void;
+  onClearChat: () => void;
+  onExportChat: () => void;
 }
 
 const getIcon = (iconId: string) => {
@@ -87,7 +92,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   currentAgent, 
   onSelectAgent, 
   currentLanguage,
-  onLanguageChange
+  onLanguageChange,
+  currentUser,
+  onLogout,
+  onClearChat,
+  onExportChat
 }) => {
   const t = getTranslation(currentLanguage);
 
@@ -181,8 +190,47 @@ const Sidebar: React.FC<SidebarProps> = ({
               />
             ))}
           </div>
+
+          {/* MOBILE ONLY: User Profile & Actions (Moved from Header) */}
+          <div className="md:hidden mt-6 pt-6 border-t border-white/5">
+             {currentUser && (
+               <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="w-8 h-8 rounded-lg bg-cyber-accent/20 flex items-center justify-center text-cyber-accent font-bold text-xs border border-cyber-accent/30">
+                     {currentUser.avatarInitials}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                     <span className="text-white text-xs font-bold truncate">{currentUser.displayName}</span>
+                     <span className="text-gray-500 text-[10px] truncate">{currentUser.username}</span>
+                  </div>
+               </div>
+             )}
+             
+             <div className="grid grid-cols-3 gap-2">
+                <button 
+                  onClick={onExportChat}
+                  className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5 transition-all active:scale-95"
+                >
+                  <Download size={16} />
+                  <span className="text-[9px] uppercase tracking-wider">Export</span>
+                </button>
+                <button 
+                  onClick={onClearChat}
+                  className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-red-400 border border-white/5 transition-all active:scale-95"
+                >
+                  <Trash2 size={16} />
+                  <span className="text-[9px] uppercase tracking-wider">Clear</span>
+                </button>
+                <button 
+                  onClick={onLogout}
+                  className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all active:scale-95"
+                >
+                  <LogOut size={16} />
+                  <span className="text-[9px] uppercase tracking-wider">Logout</span>
+                </button>
+             </div>
+          </div>
           
-          <div className="mt-6 md:mt-8 p-4 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group flex-shrink-0">
+          <div className="mt-6 md:mt-auto p-4 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 relative overflow-hidden group flex-shrink-0 hidden md:block">
             <div className="absolute inset-0 bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
             <p className="text-[10px] text-gray-500 text-center font-mono relative z-10 tracking-widest">
               {t.systemStatus}: <span className="text-green-400 shadow-green-400/50 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">{t.online}</span>
