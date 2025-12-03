@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message } from '../types';
-import { Bot, User, Copy, Check, FileCode, RefreshCw } from 'lucide-react';
+import { Bot, User, Copy, Check, FileCode, RefreshCw, Eye, Code } from 'lucide-react';
 import TypingIndicator from './TypingIndicator';
 import { getThemeHex } from '../utils/themeUtils';
 
@@ -17,6 +17,8 @@ interface ChatMessageProps {
 const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
   const match = /language-(\w+)/.exec(className || '');
   const [isCopied, setIsCopied] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  
   const codeString = String(children).replace(/\n$/, '');
 
   // Detect filename in the first line if it looks like a comment
@@ -37,6 +39,8 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
       displayCode = lines.slice(1).join('\n');
     }
   }
+
+  const isHTML = !inline && match && (match[1] === 'html' || match[1] === 'xml') && (fileName?.endsWith('.html') || codeString.includes('<html'));
 
   const handleCopy = () => {
     navigator.clipboard.writeText(displayCode); // Copy only the code, not the filename comment if extracted
@@ -63,31 +67,65 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
              )}
           </div>
 
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white transition-colors"
-            title="Copy Code"
-          >
-            {isCopied ? (
-              <>
-                <Check size={12} className="text-green-400" />
-                <span className="text-green-400">Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy size={12} />
-                <span>Copy</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+             {/* Web Builder Preview Toggle */}
+             {isHTML && (
+               <button
+                 onClick={() => setShowPreview(!showPreview)}
+                 className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded transition-colors ${showPreview ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'text-gray-400 hover:text-white'}`}
+                 title="Toggle Preview"
+               >
+                 {showPreview ? (
+                   <>
+                     <Code size={12} />
+                     <span>Show Code</span>
+                   </>
+                 ) : (
+                   <>
+                     <Eye size={12} />
+                     <span>Live Preview</span>
+                   </>
+                 )}
+               </button>
+             )}
+
+             <button
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white transition-colors"
+                title="Copy Code"
+             >
+                {isCopied ? (
+                <>
+                    <Check size={12} className="text-green-400" />
+                    <span className="text-green-400">Copied</span>
+                </>
+                ) : (
+                <>
+                    <Copy size={12} />
+                    <span>Copy</span>
+                </>
+                )}
+             </button>
+          </div>
         </div>
         
-        {/* Code Area */}
-        <div className="p-4 overflow-x-auto custom-scrollbar bg-[#0d0d0d]">
-          <code className={className} {...props} style={{ fontSize: '13px', lineHeight: '1.6', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre' }}>
-            {displayCode}
-          </code>
-        </div>
+        {/* Content Area: Either Code or Preview */}
+        {showPreview && isHTML ? (
+          <div className="w-full h-[500px] bg-white rounded-b-lg overflow-hidden">
+            <iframe 
+              srcDoc={displayCode}
+              title="Web Preview"
+              className="w-full h-full border-0"
+              sandbox="allow-scripts" // Allow JS but prevent top-level nav
+            />
+          </div>
+        ) : (
+          <div className="p-4 overflow-x-auto custom-scrollbar bg-[#0d0d0d]">
+            <code className={className} {...props} style={{ fontSize: '13px', lineHeight: '1.6', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre' }}>
+              {displayCode}
+            </code>
+          </div>
+        )}
       </div>
     );
   }
