@@ -642,14 +642,15 @@ const App: React.FC = () => {
         {/* Scroll To Bottom Button */}
         {showScrollButton && (
           <div className={`
-             fixed bottom-24 md:bottom-28 right-6 md:right-[calc(50%-2.5rem)] z-40 animate-fade-in-up
+             fixed bottom-28 right-5 z-50 animate-fade-in-up
+             md:bottom-32 md:right-[calc(50%-2.5rem)]
              ${isSidebarPinned ? 'md:right-[calc(40%-2rem)]' : ''}
           `}>
             <button 
               onClick={scrollToBottom}
-              className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all active:scale-95"
+              className="p-3 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:bg-white/10 transition-all active:scale-95 flex items-center justify-center group"
             >
-              <ArrowDown size={20} className="animate-bounce" />
+              <ArrowDown size={20} className="animate-bounce group-hover:text-cyber-accent" />
             </button>
           </div>
         )}
