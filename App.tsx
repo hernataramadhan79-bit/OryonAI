@@ -317,7 +317,12 @@ const App: React.FC = () => {
     }
   };
 
-  const handleChatFlow = async (text: string, aiMessageId: string, attachment?: { data: string; mimeType: string }) => {
+  const handleChatFlow = async (
+    text: string, 
+    aiMessageId: string, 
+    attachment: { data: string; mimeType: string } | undefined,
+    contextMessages: Message[]
+  ) => {
     stopGenerationRef.current = false;
     const initialAiMessage: Message = {
       id: aiMessageId,
@@ -328,10 +333,14 @@ const App: React.FC = () => {
       type: 'text'
     };
 
-    setMessages((prev) => [...prev, initialAiMessage]);
+    setMessages((prev) => {
+        // Prevent duplicate addition if checks run weirdly
+        if (prev.find(m => m.id === aiMessageId)) return prev;
+        return [...prev, initialAiMessage];
+    });
 
     const historyContext: Content[] = [];
-    messages.forEach(m => {
+    contextMessages.forEach(m => {
        if (m.type === 'text' && !m.isStreaming) {
          const parts: Part[] = [];
          if (m.attachment) {
@@ -401,12 +410,13 @@ const App: React.FC = () => {
       attachment: attachment 
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setIsLoading(true);
 
     try {
       const aiMessageId = uuidv4();
-      await handleChatFlow(text, aiMessageId, attachment);
+      await handleChatFlow(text, aiMessageId, attachment, nextMessages);
     } catch (err: any) {
       console.error(err);
       setError(err.message || t.errorGeneric);
@@ -438,14 +448,23 @@ const App: React.FC = () => {
     if (lastUserMsgIndex === -1) return;
 
     const lastUserMsg = messages[lastUserMsgIndex];
-    setMessages(prev => prev.slice(0, lastUserMsgIndex + 1));
+    // Create new history state up to and including the user message
+    const truncatedMessages = messages.slice(0, lastUserMsgIndex + 1);
+    setMessages(truncatedMessages);
     
+    // Explicitly reset the session so it picks up the new history
+    resetChat();
+
     setIsLoading(true);
     try {
         const aiMessageId = uuidv4();
-        await handleChatFlow(lastUserMsg.text, aiMessageId, lastUserMsg.attachment);
+        // Pass the truncated history explicitly so it doesn't use stale state
+        await handleChatFlow(lastUserMsg.text, aiMessageId, lastUserMsg.attachment, truncatedMessages);
     } catch (err: any) {
         setError(err.message || t.errorGeneric);
+        // Robust cleanup of any stuck streaming messages
+        setMessages((prev) => prev.filter(m => m.isStreaming !== true));
+    } finally {
         setIsLoading(false);
     }
   };
@@ -458,15 +477,34 @@ const App: React.FC = () => {
      if (msgIndex === -1) return;
 
      // Slice history up to that message (remove everything after)
-     // BUT, we want to replace the old user message with the new one
      const historyUpToEdit = messages.slice(0, msgIndex);
      
-     // Update state to remove old future
-     setMessages(historyUpToEdit);
+     // Create a new message object with updated text
+     const oldMsg = messages[msgIndex];
+     const newUserMsg: Message = {
+        ...oldMsg,
+        text: newText,
+        id: uuidv4(), // Regenerate ID to be safe
+        timestamp: Date.now()
+     };
      
-     // Trigger send with new text
-     // We treat it as a new send command but logically it feels like "editing and restarting"
-     await handleSendMessage(newText, messages[msgIndex].attachment);
+     // The new complete history state to send
+     const nextMessages = [...historyUpToEdit, newUserMsg];
+     setMessages(nextMessages);
+     
+     resetChat();
+
+     setIsLoading(true);
+     try {
+       const aiMessageId = uuidv4();
+       await handleChatFlow(newText, aiMessageId, newUserMsg.attachment, nextMessages);
+     } catch (err: any) {
+       console.error(err);
+       setError(err.message || t.errorGeneric);
+       setMessages((prev) => prev.filter(m => m.isStreaming !== true));
+     } finally {
+       setIsLoading(false);
+     }
   };
 
   const handleClearChat = () => {
