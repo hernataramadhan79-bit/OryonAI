@@ -1,8 +1,9 @@
 import React, { useState, memo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message } from '../types';
-import { Bot, User, Copy, Check, FileCode, RefreshCw, Eye, Code, Maximize2, Minimize2, Edit, Save } from 'lucide-react';
+import { Bot, User, Copy, Check, FileCode, RefreshCw, Eye, Code, Maximize2, Minimize2, Edit, Save, X } from 'lucide-react';
 import TypingIndicator from './TypingIndicator';
 import { getThemeHex } from '../utils/themeUtils';
 
@@ -58,7 +59,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
 
   if (!inline && match) {
     return (
-      <div className={`my-4 rounded-lg border border-white/10 bg-[#0d0d0d] shadow-md w-full max-w-full group font-sans ${isFullScreen ? 'fixed inset-0 z-[100] m-0 rounded-none h-screen flex flex-col' : 'overflow-hidden'}`}>
+      <div className={`my-4 rounded-lg border border-white/10 bg-[#0d0d0d] shadow-md w-full max-w-full group font-sans overflow-hidden`}>
         
         {/* Header - IDE Tab Style */}
         <div className="bg-[#1a1a1a] px-3 py-2 flex items-center justify-between border-b border-white/5 flex-shrink-0">
@@ -149,16 +150,45 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
         </div>
 
         {/* Content Area */}
-        <div className={`relative w-full ${isFullScreen ? 'flex-grow bg-[#0d0d0d]' : ''}`}>
+        <div className="relative w-full">
            {showPreview ? (
-             <div className="w-full h-full min-h-[400px] bg-white rounded-b-lg overflow-hidden">
-                <iframe 
-                  srcDoc={currentCode} 
-                  title="Preview" 
-                  className="w-full h-full border-none" 
-                  sandbox="allow-scripts" // Basic safety
-                />
-             </div>
+             <>
+               {isFullScreen ? createPortal(
+                 <div className="fixed inset-0 z-[9999] bg-[#0d0d0d] flex flex-col animate-fade-in-up">
+                   {/* Full Screen Toolbar */}
+                   <div className="flex items-center justify-between p-3 bg-[#1a1a1a] border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-mono text-sm font-bold tracking-wider">{fileName || 'Web Preview'}</span>
+                        <span className="text-[10px] text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">LIVE</span>
+                      </div>
+                      <button 
+                        onClick={() => setIsFullScreen(false)}
+                        className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+                      >
+                        <X size={20} />
+                      </button>
+                   </div>
+                   <div className="flex-grow w-full h-full bg-white relative">
+                      <iframe 
+                        srcDoc={currentCode} 
+                        title="Full Screen Preview" 
+                        className="w-full h-full border-none" 
+                        sandbox="allow-scripts allow-modals allow-forms" 
+                      />
+                   </div>
+                 </div>,
+                 document.body
+               ) : (
+                 <div className="w-full h-full min-h-[400px] bg-white rounded-b-lg overflow-hidden">
+                    <iframe 
+                      srcDoc={currentCode} 
+                      title="Preview" 
+                      className="w-full h-full border-none" 
+                      sandbox="allow-scripts allow-modals allow-forms" 
+                    />
+                 </div>
+               )}
+             </>
            ) : isEditing ? (
              <textarea 
                value={currentCode}
