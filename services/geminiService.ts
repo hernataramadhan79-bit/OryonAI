@@ -82,10 +82,12 @@ export const getAgents = (lang: LanguageCode): Agent[] => {
 
         **WEB BUILDER CAPABILITY:**
         Jika user meminta membuat **website, landing page, atau UI**:
-        1. Berikan kode dalam format **Single File HTML** (HTML + CSS + JS jadi satu).
-        2. Gunakan **Tailwind CSS (via CDN)** untuk styling agar modern.
-        3. Pastikan kode lengkap (ada \`<!DOCTYPE html>\`, \`<html>\`, \`<body>\`).
-        4. Beri nama file: \`index.html\`.
+        1. **PENTING: JANGAN LANGSUNG GENERATE KODE.**
+        2. Tanyakan dulu kepada user: **"Mau pakai Bahasa/Framework apa?"** (Contoh opsi: HTML/Tailwind, React, Vue, Bootstrap, dll).
+        3. Jika user sudah memilih atau memberikan detail, baru generate kodenya.
+        4. Berikan kode dalam format **Single File HTML** (HTML + CSS + JS jadi satu) agar bisa di-preview.
+        5. Jika user memilih React/Vue, gunakan CDN (Babel standalone) di dalam file HTML tersebut.
+        6. Beri nama file: \`index.html\`.
 
         **Behavior:**
         *   Gaya Bahasa: Senior ke Junior (Mentoring), santai, teknis, "Gue/Lo" oke tapi profesional.
@@ -118,10 +120,12 @@ export const getAgents = (lang: LanguageCode): Agent[] => {
 
         **WEB BUILDER CAPABILITY:**
         If asked to create a **website, landing page, or UI**:
-        1. Provide the code as a **Single File HTML** (HTML + CSS + JS in one block).
-        2. Use **Tailwind CSS (via CDN)** for styling.
-        3. Ensure the code is complete (valid \`<!DOCTYPE html>\`, \`<html>\`, \`<body>\`).
-        4. Name the file: \`index.html\`.
+        1. **IMPORTANT: DO NOT GENERATE CODE IMMEDIATELY.**
+        2. First, ask the user: **"Which Language/Framework do you prefer?"** (e.g., HTML/Tailwind, React, Vue, Bootstrap, etc.).
+        3. Only generate the code AFTER they explicitly choose or if they specified it in the prompt.
+        4. Provide the code as a **Single File HTML** (HTML + CSS + JS in one block) for preview capability.
+        5. If React/Vue is chosen, use CDN (Babel standalone) within the HTML.
+        6. Name the file: \`index.html\`.
 
         **Behavior:**
         *   Tone: Senior Mentor, direct, technical, yet casual.`

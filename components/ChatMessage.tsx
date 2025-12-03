@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message } from '../types';
-import { Bot, User, Copy, Check, FileCode, RefreshCw, Eye, Code, Maximize2, Minimize2, Edit, Save, X } from 'lucide-react';
+import { Bot, User, Copy, Check, FileCode, RefreshCw, Eye, Code, Maximize2, Minimize2, Edit, Save, X, Globe } from 'lucide-react';
 import TypingIndicator from './TypingIndicator';
 import { getThemeHex } from '../utils/themeUtils';
 
@@ -158,6 +158,7 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
                    {/* Full Screen Toolbar */}
                    <div className="flex items-center justify-between p-3 bg-[#1a1a1a] border-b border-white/10">
                       <div className="flex items-center gap-2">
+                        <Globe size={16} className="text-green-400" />
                         <span className="text-white font-mono text-sm font-bold tracking-wider">{fileName || 'Web Preview'}</span>
                         <span className="text-[10px] text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">LIVE</span>
                       </div>
@@ -179,13 +180,29 @@ const CodeBlock = memo(({ inline, className, children, ...props }: any) => {
                  </div>,
                  document.body
                ) : (
-                 <div className="w-full h-full min-h-[400px] bg-white rounded-b-lg overflow-hidden">
-                    <iframe 
-                      srcDoc={currentCode} 
-                      title="Preview" 
-                      className="w-full h-full border-none" 
-                      sandbox="allow-scripts allow-modals allow-forms" 
-                    />
+                 <div className="w-full bg-[#e5e5e5] rounded-b-lg overflow-hidden border-t border-white/10">
+                    {/* Mock Browser Header */}
+                    <div className="h-8 bg-[#f0f0f0] border-b border-[#d4d4d4] flex items-center px-3 gap-3">
+                       <div className="flex gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57] border border-[#e0443e]"></div>
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e] border border-[#d89e24]"></div>
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#28c840] border border-[#1aab29]"></div>
+                       </div>
+                       <div className="flex-grow h-5 bg-white rounded-md border border-[#d4d4d4] flex items-center justify-center">
+                          <span className="text-[10px] text-gray-500 font-sans flex items-center gap-1">
+                             <Globe size={8} />
+                             localhost:3000
+                          </span>
+                       </div>
+                    </div>
+                    <div className="w-full h-[400px] bg-white relative">
+                       <iframe 
+                        srcDoc={currentCode} 
+                        title="Preview" 
+                        className="w-full h-full border-none" 
+                        sandbox="allow-scripts allow-modals allow-forms" 
+                       />
+                    </div>
                  </div>
                )}
              </>
